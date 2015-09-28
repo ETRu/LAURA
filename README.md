@@ -1,2 +1,2 @@
 # Laura
-Laura Stochastic  Networks
+Laura Stochastic Random Networks
