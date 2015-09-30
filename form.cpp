@@ -289,6 +289,12 @@ Fl_Button *turbogo;
 
 
 
+//fluctuation window
+Fl_Window    *dialfluc;
+
+
+
+
 int initdrawbut=0;
 
 
@@ -2315,6 +2321,70 @@ void testcb(Fl_Widget *, void *){
 
 
 
+
+
+
+
+
+/************************************** FLUCTUATION WINDOW **********************************/
+
+
+
+
+//-------------------------------------------------------------------------------------------------
+void FluctWindow(void) {
+    int w_est,h_est;
+    
+    int xpos, ypos, widgh, widgw;
+    
+    w_est= DIAL_W;   h_est= 200;
+    
+    dialfluc=   new Fl_Window(w_est,h_est,"Fluctuations");
+
+    xpos=5;
+    ypos=5;
+    
+    
+    
+    
+    widgh=BUTTON_H1;
+    widgw=w_est-10;
+    ypos=ypos+10;
+    Fl_Button *closeit = new Fl_Button(xpos, ypos, widgw, widgh, "CLOSE");
+    ypos=ypos+widgh;
+    
+    closeit->callback(exitfluctcb,0);
+    
+    
+    dialfluc->size(w_est,h_est);
+    dialfluc->end();
+    dialfluc->show();
+    
+    
+    
+}
+
+
+
+void fluctuationscb(Fl_Widget *, void *){
+    
+    FluctWindow();
+    
+}
+
+
+
+//--------------------------------------------
+void exitfluctcb(Fl_Widget *, void *) {
+
+    dialfluc->hide();
+   
+}
+
+
+
+
+
 /************************************** MAIN WINDOWD DRAW **********************************/
 
 
@@ -2765,7 +2835,7 @@ void CreateMyWindow(void) {
     ypos=ypos+10;
     
     
-    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,530, "");
+    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,580, "");
     histogroup->align(FL_ALIGN_TOP_LEFT);
     histogroup->labelfont(FL_BOLD);
     histogroup->box(FL_BORDER_BOX);
@@ -2800,13 +2870,21 @@ void CreateMyWindow(void) {
     ypos=ypos+widgh;
     
     ypos=ypos+5;
+    
+    widgh=BUTTON_H1;
+    widgw=BUTTON_L/2;
+    fluctwinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Fluctuations");
+ 
     widgh=BUTTON_H1;
     widgw=BUTTON_WR-40;
     printbutton1 = new Fl_Button(xpos+(COLWIDTHLARGE-widgw),ypos,widgw,widgh, "Print ^");
     ypos=ypos+widgh;
     
+
     
-   ypos=ypos+10;
+    
+    
+    ypos=ypos+20;
     widgh=30;
     xpos=xpos-5;
     roundstop = new Fl_Round_Button(xpos, ypos, widgw, widgh, "STOP WHEN STEADY");
@@ -2863,35 +2941,11 @@ void CreateMyWindow(void) {
     ypos=ypos+widgh;
     
     
-     /* ypos=ypos+20;
-     widgw=BUTTON_L-10;
-     dmeanbuff = new Fl_Text_Buffer();
-     dmeandisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Delta Mean");
-     dmeandisp->buffer(dmeanbuff);
-     dmeandisp->textsize(10);
-     ypos=ypos+widgh;
-    
-     ypos=ypos+20;
-     widgw=BUTTON_L-10;
-     dvarbuff = new Fl_Text_Buffer();
-     dvardisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Delta Var");
-     dvardisp->buffer(dvarbuff);
-     dvardisp->textsize(10);
-     ypos=ypos+widgh;*/
-    
+
     
     
     histogroup->end();
     if(usesteady==0){histogroup->deactivate();}
-    
-    
-    
-    ypos=ypos+20;
-    widgh=BUTTON_H1;
-    widgw=BUTTON_L-20;
-    fluctwinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Fluctuations");
-    ypos=ypos+widgh;
-    
     
 
     
@@ -2982,6 +3036,12 @@ void CreateMyWindow(void) {
     printbutton1->callback(printhistodatacb,0);
     
     cstopbutton->callback(cstopcb,0);
+    
+    
+    
+       fluctwinbutton->callback(fluctuationscb,0);
+    
+    
     
     mainwindow->end();
     

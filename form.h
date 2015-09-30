@@ -33,11 +33,6 @@
 
 
 
-//TURBO DIAL
-void TurboDial(void);
-void exitdialturbocb(Fl_Widget *, void *);
-void goturborun();
-
 //CHANGE LAYOUT dial
 void ChangeLayout(void);
 void gridcb(Fl_Widget *, void *);
@@ -117,6 +112,11 @@ void prevcb(Fl_Widget *, void *);
 //change layout
 void changelayoutcb(Fl_Widget *, void *);
 
+//TURBO DIAL
+void TurboDial(void);
+void exitdialturbocb(Fl_Widget *, void *);
+void goturborun();
+
 //turbo
 void turbocb(Fl_Widget *, void *);
 
@@ -124,12 +124,13 @@ void turbocb(Fl_Widget *, void *);
 void cstopcb(Fl_Widget *, void *);
 void cstop();
 
-//test
-void testcb(Fl_Widget *, void *);
+//fluctuations window
+void FluctWindow(void);
+void fluctuationscb(Fl_Widget *, void *);
+void exitfluctcb(Fl_Widget *, void *) ;
 
 
 //----- GENERATE MAIN WINDOW
 void CreateMyWindow(void);
-
 
 
