@@ -29,3 +29,6 @@
 
 # XCode files
 *.xcworkspace
+
+#TXT
+*.txt
