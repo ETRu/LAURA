@@ -164,7 +164,7 @@ Fl_Text_Display *dvardisp;
 Fl_Button *printbutton1;
 Fl_Button *cstopbutton;
 
-Fl_Button *test;
+Fl_Button * fluctwinbutton;
 
 
 //bottom buttons
@@ -2889,7 +2889,7 @@ void CreateMyWindow(void) {
     ypos=ypos+20;
     widgh=BUTTON_H1;
     widgw=BUTTON_L-20;
-    Fl_Button * fluctwinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Fluctuations");
+    fluctwinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Fluctuations");
     ypos=ypos+widgh;
     
     
