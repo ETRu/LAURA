@@ -2893,17 +2893,7 @@ void CreateMyWindow(void) {
     ypos=ypos+widgh;
     
     
-    
-    /*
-    
-    ypos=ypos+40;
-    widgh=BUTTON_H1;
-    test = new Fl_Button(xpos,ypos,BUTTON_WR,widgh, " TEST ");
-    ypos=ypos+widgh;
-     
-     test->callback(testcb,0);
-     
-    */
+
     
     drawhistobutton->callback(drawhistocb,0);
     
