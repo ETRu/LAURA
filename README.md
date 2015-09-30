@@ -1,3 +1,2 @@
-# LAURA
-
-Laura is...
+# Laura
+Laura Stochastic Random Networks
