@@ -32,3 +32,6 @@
 
 #TXT
 *.txt
+
+#DATA FOLDER
+data/
