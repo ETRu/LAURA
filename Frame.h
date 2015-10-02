@@ -30,3 +30,9 @@ public:
     DataFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
 };
 
+
+class FluctFrame : public Fl_Gl_Window {
+    void draw();
+public:
+    FluctFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
+};

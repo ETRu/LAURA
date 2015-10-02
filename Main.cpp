@@ -59,6 +59,7 @@
 // FLTK FRAMES / WINDOWS / other
 extern Frame   *scene;
 extern DataFrame   *datascene;
+extern FluctFrame   *fluctscene;
 extern int framexmin, framexmax, frameymin, frameymax;
 extern Fl_Light_Button *runbutton;
 
@@ -144,6 +145,8 @@ int haveout;        //do I have a working output file?
 
 int rewrite;        //mainidlecb (fltk event routine) has to rewrite something?
 int error;          //some error occured
+
+int viewingdata;    //is the fluctuation window open?
 
 
 
@@ -470,12 +473,13 @@ void mainidle_cb(void*){    //this routine updates the program.
     if (ticks<=maxtime){
     scene->redraw();
     datascene->redraw();
+    if(viewingdata==1){fluctscene->redraw();}
     }
     
  
     rewrite=0;
     
-    //Fl::repeat_timeout(1.0, mainidle_cb);
+    
     
 }
 
@@ -499,7 +503,7 @@ int main(int argc, char **argv) {
     isrelaxed=0;
     havecstop=0;
     isdissipating=0;
-    
+    viewingdata=0;
     
     
     //RANDOM NUMBER GENERATOR INITIALISE
@@ -549,9 +553,9 @@ int main(int argc, char **argv) {
     rewrite=1;
     
     CreateMyWindow();
+    DataWindow();
     
     
-  //Fl::add_timeout(1.0,mainidle_cb);
   Fl::add_idle(mainidle_cb, 0);
   Fl::run();
     

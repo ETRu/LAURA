@@ -25,5 +25,9 @@ double BlueHue(double color);
 
 void draw_scene(void);
 void draw_init(void);
+
 void draw_datascene(void);
 void draw_datainit(void);
+
+void draw_fluctscene(void);
+void draw_fluctinit(void);

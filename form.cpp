@@ -70,15 +70,17 @@ extern char path[100];
 extern int error;
 extern char errorstring[100];
 
+extern int viewingdata;
 
 //main window defines-----------------------
 #define BORDER1 20
 #define SCREEN_WIDTH  500
 #define SCREEN_HEIGHT 500
 #define COLWIDTH 120
-#define COLWIDTHLARGE 200
 #define LEFT_SPACE COLWIDTH*2+2*BORDER1
-#define RIGHT_SPACE COLWIDTH+COLWIDTHLARGE+3*BORDER1
+#define RIGHT_SPACE COLWIDTH+BORDER1
+
+#define DATAWINWIDTH 600
 
 #define BUTTON_WL 100
 #define BUTTON_WR 100
@@ -90,6 +92,11 @@ extern char errorstring[100];
 Fl_Window    *form;
 Fl_Group    *mainwindow;
 Frame        *scene;
+
+//data window
+Fl_Window    *datawindow;
+FluctFrame    *fluctscene;
+
 
 igraph_matrix_t oldlayout;
 
@@ -164,7 +171,7 @@ Fl_Text_Display *dvardisp;
 Fl_Button *printbutton1;
 Fl_Button *cstopbutton;
 
-Fl_Button * fluctwinbutton;
+Fl_Button * datawinbutton;
 
 
 //bottom buttons
@@ -286,12 +293,6 @@ Fl_Button *done4;
 //turbo dial
 Fl_Window    *dialturbo;
 Fl_Button *turbogo;
-
-
-
-//fluctuation window
-Fl_Window    *dialfluc;
-
 
 
 
@@ -2182,8 +2183,12 @@ void turbocb(Fl_Widget *, void *){
 
 
 void drawhistocb(Fl_Widget *, void *) {
-    if (drawhisto==0) {drawhisto=1; datascene->activate();}
-    else {drawhisto=0;datascene->deactivate();}
+    if (drawhisto==0) {drawhisto=1;
+        datascene->activate();
+    }
+    else {drawhisto=0;
+        datascene->deactivate();
+    }
     
 }
 
@@ -2326,58 +2331,232 @@ void testcb(Fl_Widget *, void *){
 
 
 
-/************************************** FLUCTUATION WINDOW **********************************/
+/************************************** DATA   WINDOW **********************************/
 
 
 
 
 //-------------------------------------------------------------------------------------------------
-void FluctWindow(void) {
+void DataWindow(void) {
     int w_est,h_est;
-    
     int xpos, ypos, widgh, widgw;
     
-    w_est= DIAL_W;   h_est= 200;
+    viewingdata=1;
     
-    dialfluc=   new Fl_Window(w_est,h_est,"Fluctuations");
+    widgw=200;
+    
+    w_est= DATAWINWIDTH;   h_est= 200;
+    
+    datawindow=   new Fl_Window(w_est,h_est,"LAURA - Data Window");
 
-    xpos=5;
+    xpos=10;
     ypos=5;
     
     
     
+    widgh=BUTTON_H1;
+    Fl_Box *mydatabox = new Fl_Box(xpos,ypos,BUTTON_L,widgh, " Density Histogram ");
+    mydatabox->labelsize(16);
+    mydatabox->labelfont(FL_BOLD);
+    mydatabox->box(FL_ROUNDED_BOX);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+10;
+    
+    
+    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,540, "");
+    histogroup->align(FL_ALIGN_TOP_LEFT);
+    histogroup->labelfont(FL_BOLD);
+    histogroup->box(FL_BORDER_BOX);
+    histogroup->color(FL_LIGHT2);
+    
+    ypos=ypos+5;
+    
+    widgh=BUTTON_L; widgw=BUTTON_L;
+    datascene =  new DataFrame(xpos,ypos,widgw,widgh, 0);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+5;
+    widgh=BUTTON_H1;  widgw=BUTTON_L;
+    drawhistobutton = new Fl_Check_Button(xpos,ypos,BUTTON_L,widgh,"Draw Histo");
+    drawhistobutton->value(1);    drawhisto=1;
+    ypos=ypos+widgh;
+    
+    ypos=ypos+10;
+    widgw=BUTTON_L-10;
+    meanbuff = new Fl_Text_Buffer();
+    meandisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Mean");
+    meandisp->buffer(meanbuff);
+    meandisp->textsize(10);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+10;
+    widgw=BUTTON_L-10;
+    varbuff = new Fl_Text_Buffer();
+    vardisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Variance");
+    vardisp->buffer(varbuff);
+    vardisp->textsize(10);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+5;
     
     widgh=BUTTON_H1;
-    widgw=w_est-10;
+    widgw=BUTTON_WR-40;
+    printbutton1 = new Fl_Button(xpos+BUTTON_L-widgw-10,ypos,widgw,widgh, "Print ^");
+    ypos=ypos+widgh;
+    
+    
+    
+    
+    
+    ypos=ypos+20;
+    widgh=30;
+    xpos=xpos-5;
+    roundstop = new Fl_Round_Button(xpos, ypos, widgw, widgh, "STOP WHEN STEADY");
+    ypos=ypos+widgh;
+    
+    xpos=xpos+20;
+    widgh=20;
+    widgw=BUTTON_WL-20;
+    ypos=ypos+20;
+    inmeanstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, "STOP-Mean:");
+    inmeanstop->align(FL_ALIGN_TOP_LEFT);
+    inmeanstop->step(0.0001);
+    inmeanstop->minimum(0);
+    inmeanstop->maximum(10);
+    inmeanstop->value(1.);
+    
+    
+    widgh=20;
+    xpos=xpos+10+widgw;
+    inmeanerstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, " (error):");
+    inmeanerstop->align(FL_ALIGN_TOP_LEFT);
+    inmeanerstop->step(0.0001);
+    inmeanerstop->minimum(0);
+    inmeanerstop->maximum(10);
+    inmeanerstop->value(0.005);
+    ypos=ypos+widgh;
+    xpos=xpos-10-widgw;
+    
+    widgh=20;
+    ypos=ypos+20;
+    invarstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, "STOP-Var:");
+    invarstop->align(FL_ALIGN_TOP_LEFT);
+    invarstop->step(0.0001);
+    invarstop->minimum(0);
+    invarstop->maximum(10);
+    invarstop->value(0.1);
+    
+    
+    widgh=20;
+    xpos=xpos+10+widgw;
+    invarerstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, " (error):");
+    invarerstop->align(FL_ALIGN_TOP_LEFT);
+    invarerstop->step(0.0001);
+    invarerstop->minimum(0);
+    invarerstop->maximum(10);
+    invarerstop->value(0.005);
+    ypos=ypos+widgh;
+    xpos=xpos-10-widgw;
+    
+    ypos=ypos+10;
+    widgh=BUTTON_H1;
+    widgw=widgw+widgw+10;
+    cstopbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Calculate stop cond.");
+    ypos=ypos+widgh;
+    
+    
+    
+    
+    
+    histogroup->end();
+    if(usesteady==0){
+        histogroup->deactivate();
+    }
+    
+    
+    
+    //  MEAN VALUE HISTOGRAM CALLBACKS
+    drawhistobutton->callback(drawhistocb,0);
+    printbutton1->callback(printhistodatacb,0);
+    cstopbutton->callback(cstopcb,0);
+    
+    ypos=ypos+20;
+    
+    if(ypos+5 > h_est){
+        h_est=ypos+5;
+        datawindow->size(w_est,h_est);
+    }
+    
+    
+    // II DATA COLUMN
+    
+    xpos=xpos+BUTTON_L+10;
+    ypos=5;
+    
+    
+    widgh=BUTTON_H1;
+    Fl_Box *myfluctbox = new Fl_Box(xpos,ypos,widgw,widgh, " Activation ");
+    myfluctbox->labelsize(16);
+    myfluctbox->labelfont(FL_BOLD);
+    myfluctbox->box(FL_ROUNDED_BOX);
+    ypos=ypos+widgh;
+    ypos=ypos+5;
+    
+    
+    widgh=widgw;
+    fluctscene =  new FluctFrame(xpos,ypos,widgw,widgh, 0);
+    ypos=ypos+widgh;
+    
+    
+    widgh=BUTTON_H1;
     ypos=ypos+10;
     Fl_Button *closeit = new Fl_Button(xpos, ypos, widgw, widgh, "CLOSE");
     ypos=ypos+widgh;
     
-    closeit->callback(exitfluctcb,0);
     
     
-    dialfluc->size(w_est,h_est);
-    dialfluc->end();
-    dialfluc->show();
     
     
+    
+    closeit->callback(exitdatacb,0);
+    
+    if(ypos+5 > h_est){
+        h_est=ypos+5;
+        datawindow->size(w_est,h_est);
+    }
+    
+    
+    datawindow->end();
+    datawindow->show();
+    
+    datascene->show();
+
     
 }
 
 
 
-void fluctuationscb(Fl_Widget *, void *){
+void datacb(Fl_Widget *, void *){
     
-    FluctWindow();
+    if (viewingdata==0) {
+        datawindow->show();
+        viewingdata=1;
+    }
+    
+    else {  datawindow->hide();
+        viewingdata=0;
+    }
     
 }
 
 
 
 //--------------------------------------------
-void exitfluctcb(Fl_Widget *, void *) {
+void exitdatacb(Fl_Widget *, void *) {
 
-    dialfluc->hide();
+    datawindow->hide();
+    viewingdata=0;
    
 }
 
@@ -2404,7 +2583,7 @@ void CreateMyWindow(void) {
     w_est= LEFT_SPACE+SCREEN_WIDTH+RIGHT_SPACE;
     h_est= 23+SCREEN_HEIGHT+150;
     
-    form = new Fl_Window(w_est,h_est,"LAURA");
+    form = new Fl_Window(w_est,h_est,"LAURA - MAIN WINDOW");
     
     mainwindow = new Fl_Group(0,0,w_est,h_est,"");
     
@@ -2734,6 +2913,23 @@ void CreateMyWindow(void) {
     xpos=LEFT_SPACE+SCREEN_WIDTH+20;
     
     
+    
+    widgh=BUTTON_H1;
+    Fl_Box *dbox = new Fl_Box(xpos,ypos,BUTTON_WR,widgh, " Data ");
+    dbox->labelsize(16);
+    dbox->labelfont(FL_BOLD);
+    dbox->box(FL_ROUNDED_BOX);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+10;
+    
+    widgh=BUTTON_H;
+    datawinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Data Window");
+    ypos=ypos+widgh;
+    
+    
+    ypos=ypos+20;
+    
     widgh=BUTTON_H1;
     Fl_Box *netbox = new Fl_Box(xpos,ypos,BUTTON_WR,widgh, " Network ");
     netbox->labelsize(16);
@@ -2741,53 +2937,28 @@ void CreateMyWindow(void) {
     netbox->box(FL_ROUNDED_BOX);
     ypos=ypos+widgh;
     
-    widgh=3*BUTTON_H;
     
     ypos=ypos+10;
-    
+    widgh=3*BUTTON_H;
     databuff = new Fl_Text_Buffer();
     datadisp = new Fl_Text_Display(xpos,ypos, BUTTON_WR,widgh, "");
     datadisp->buffer(databuff);
     ypos=ypos+widgh;
 
     
-    ypos=ypos+40;
-    
     widgh=BUTTON_H;
+    
+    ypos=ypos+20;
     bsetlayout = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Layout");
     ypos=ypos+widgh;
+ 
     
-    /* widgh=BUTTON_H1;
-     ypos=ypos+10;
-     Fl_Box *box = new Fl_Box(xpos, ypos, BUTTON_WR, widgh, "New Network:");
-     box->labelsize(16);
-     ypos=ypos+widgh;
-     
-     widgh=BUTTON_H1;
-     bnewlattice = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "New Lattice");
-     ypos=ypos+widgh;
-     
-     widgh=BUTTON_H1;
-     bnewrandom = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "New Random");
-     ypos=ypos+widgh;
-     
-     ypos=ypos+5;
-     widgh=BUTTON_H1;
-     bnewclustered = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "clustered");
-     ypos=ypos+widgh;   */
-    
-    
-    ypos=ypos+50;
+    ypos=ypos+20;
     widgh=BUTTON_H;
     bnewnet = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "New Network");
     ypos=ypos+widgh;
     
-    /*widgh=BUTTON_H1;
-    ypos=ypos+10;
-    Fl_Box *box1 = new Fl_Box(xpos, ypos, BUTTON_WR, widgh, "Load/Save Net.:");
-    box1->labelsize(16);
-    ypos=ypos+widgh;
-    */
+
     ypos=ypos+10;
     widgh=BUTTON_H1;
     bload = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Load Network");
@@ -2803,7 +2974,7 @@ void CreateMyWindow(void) {
     widgh=BUTTON_H1;
     bsaveas = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Save Net. As");
     ypos=ypos+widgh;
-    
+
 
 
     
@@ -2821,139 +2992,6 @@ void CreateMyWindow(void) {
     
     
     //---------- RIGHT COLUMN II -------- R.C.2 --------------------------------------------------------
-    ypos=10;
-    xpos=LEFT_SPACE+SCREEN_WIDTH+20+COLWIDTH+10;
-    
-    
-    widgh=BUTTON_H1;
-    Fl_Box *mydatabox = new Fl_Box(xpos,ypos,BUTTON_L,widgh, " Data ");
-    mydatabox->labelsize(16);
-    mydatabox->labelfont(FL_BOLD);
-    mydatabox->box(FL_ROUNDED_BOX);
-    ypos=ypos+widgh;
-    
-    ypos=ypos+10;
-    
-    
-    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,580, "");
-    histogroup->align(FL_ALIGN_TOP_LEFT);
-    histogroup->labelfont(FL_BOLD);
-    histogroup->box(FL_BORDER_BOX);
-    histogroup->color(FL_LIGHT2);
-    
-    ypos=ypos+5;
-    
-    widgh=BUTTON_L; widgw=BUTTON_L;
-    datascene =  new DataFrame(xpos,ypos,widgw,widgh, 0);
-    ypos=ypos+widgh;
-    
-    ypos=ypos+5;
-    widgh=BUTTON_H1;  widgw=BUTTON_L;
-    drawhistobutton = new Fl_Check_Button(xpos,ypos,BUTTON_L,widgh,"Draw Histo");
-    drawhistobutton->value(1);    drawhisto=1;
-    ypos=ypos+widgh;
-    
-    ypos=ypos+10;
-    widgw=BUTTON_L-10;
-    meanbuff = new Fl_Text_Buffer();
-    meandisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Mean");
-    meandisp->buffer(meanbuff);
-    meandisp->textsize(10);
-    ypos=ypos+widgh;
-    
-    ypos=ypos+10;
-    widgw=BUTTON_L-10;
-    varbuff = new Fl_Text_Buffer();
-    vardisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Variance");
-    vardisp->buffer(varbuff);
-    vardisp->textsize(10);
-    ypos=ypos+widgh;
-    
-    ypos=ypos+5;
-    
-    widgh=BUTTON_H1;
-    widgw=BUTTON_L/2;
-    fluctwinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Fluctuations");
- 
-    widgh=BUTTON_H1;
-    widgw=BUTTON_WR-40;
-    printbutton1 = new Fl_Button(xpos+(COLWIDTHLARGE-widgw),ypos,widgw,widgh, "Print ^");
-    ypos=ypos+widgh;
-    
-
-    
-    
-    
-    ypos=ypos+20;
-    widgh=30;
-    xpos=xpos-5;
-    roundstop = new Fl_Round_Button(xpos, ypos, widgw, widgh, "STOP WHEN STEADY");
-    ypos=ypos+widgh;
-    
-    xpos=xpos+20;
-    widgh=20;
-    widgw=BUTTON_WL-20;
-    ypos=ypos+20;
-    inmeanstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, "STOP-Mean:");
-    inmeanstop->align(FL_ALIGN_TOP_LEFT);
-    inmeanstop->step(0.0001);
-    inmeanstop->minimum(0);
-    inmeanstop->maximum(10);
-    inmeanstop->value(1.);
-    
-    
-    widgh=20;
-    xpos=xpos+10+widgw;
-    inmeanerstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, " (error):");
-    inmeanerstop->align(FL_ALIGN_TOP_LEFT);
-    inmeanerstop->step(0.0001);
-    inmeanerstop->minimum(0);
-    inmeanerstop->maximum(10);
-    inmeanerstop->value(0.005);
-    ypos=ypos+widgh;
-    xpos=xpos-10-widgw;
-    
-    widgh=20;
-    ypos=ypos+20;
-    invarstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, "STOP-Var:");
-    invarstop->align(FL_ALIGN_TOP_LEFT);
-    invarstop->step(0.0001);
-    invarstop->minimum(0);
-    invarstop->maximum(10);
-    invarstop->value(0.1);
-    
-    
-    widgh=20;
-    xpos=xpos+10+widgw;
-    invarerstop = new Fl_Value_Input(xpos,ypos,widgw,widgh, " (error):");
-    invarerstop->align(FL_ALIGN_TOP_LEFT);
-    invarerstop->step(0.0001);
-    invarerstop->minimum(0);
-    invarerstop->maximum(10);
-    invarerstop->value(0.005);
-    ypos=ypos+widgh;
-    xpos=xpos-10-widgw;
-    
-    ypos=ypos+10;
-    widgh=BUTTON_H1;
-    widgw=widgw+widgw+10;
-    cstopbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Calculate stop cond.");
-    ypos=ypos+widgh;
-    
-    
-
-    
-    
-    histogroup->end();
-    if(usesteady==0){histogroup->deactivate();}
-    
-
-    
-    drawhistobutton->callback(drawhistocb,0);
-    
-    
-    
-    
     
     
     
@@ -3023,9 +3061,7 @@ void CreateMyWindow(void) {
     
     turbobutton->callback(turbocb,0);
     
-    /* bnewlattice->callback(newlatcb,0);
-     bnewrandom->callback(newrandcb,0);
-     bnewclustered->callback(newcluscb,0);*/
+ 
     bnewnet->callback(newnetcb,0);
     bload->callback(loadcb,0);
     bsaveas->callback(saveascb,0);
@@ -3033,13 +3069,10 @@ void CreateMyWindow(void) {
     
     bsetlayout->callback(changelayoutcb,0);
     
-    printbutton1->callback(printhistodatacb,0);
-    
-    cstopbutton->callback(cstopcb,0);
     
     
+    datawinbutton->callback(datacb,0);
     
-       fluctwinbutton->callback(fluctuationscb,0);
     
     
     
@@ -3048,7 +3081,6 @@ void CreateMyWindow(void) {
     form->end();
     form->show();
     scene->show();
-    datascene->show();
 }
 //-------------------------------------------------------------------------------------------------
 

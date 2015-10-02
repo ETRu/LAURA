@@ -567,3 +567,201 @@ void draw_datascene(void){
     
 }
 
+
+
+
+
+
+
+
+
+/**********************************************                    ****************************************
+ **********************************************                    ****************************************
+ **********************************************  FLUCTATIONS DRAW  ****************************************
+ **********************************************                    ****************************************
+ **********************************************                    ****************************************
+ */
+
+
+
+
+void draw_fluctinit(void){
+    
+    
+}
+
+
+
+
+
+void draw_fluctscene(void){
+    
+    int nbins=histdist.nbins;
+    float binwidth=9./nbins;
+    
+    char textstring[100];
+    char firstchar;
+    
+    float xtl, xtr, xbl, xbr, ytl, ytr, ybl, ybr;
+    //maxmum is 8 points in height.
+    
+    
+    if(drawhisto==1 && usesteady==1){
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(1., 1., 1., 1);
+        
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        
+        
+        for(int i=0;i<nbins;++i){
+            
+            xtl=1+i*binwidth; ytl=(VECTOR((histdist.bins))[i])*8+1;
+            xtr=1+(1+i)*binwidth; ytr=ytl;
+            xbl=xtl; ybl=1;
+            xbr=xtr; ybr=ybl;
+            
+            //BORDER
+            if(ytl>1){
+                glColor3f(0,0,0);
+                glBegin(GL_QUADS);                      // Draw A Quad
+                glVertex3f(xtl, ytl, 0.0f);              // Top Left
+                glVertex3f(xtr, ytr, 0.0f);              // Top Right
+                glVertex3f(xbr,ybr, 0.0f);              // Bottom Right
+                glVertex3f(xbl,ybl, 0.0f);              // Bottom Left
+                glEnd();                            // Done Drawing The Quad
+                
+                //inner
+                glColor3f(1,0,0);
+                glBegin(GL_QUADS);
+                glVertex3f(xtl+0.05, ytl-0.05, 0.1f);
+                glVertex3f(xtr-0.05, ytr-0.05, 0.1f);
+                glVertex3f(xbr-0.05, ybr+0.05, 0.1f);
+                glVertex3f(xbl+0.05, ybl+0.05, 0.1f);
+                glEnd();
+            }
+        }
+        
+        
+        //draw mean
+        
+        glColor3f(0,1,0);
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*(histdist.mean),10.,0.0);
+        glVertex3d(1+(9./4.)*(histdist.mean),0.6,0.0);
+        glEnd();
+        gl_font(FL_TIMES,12);
+        gl_draw("Mean",(float)(0+(9./4.)*(histdist.mean)),(float)10.);
+        
+        
+        
+        glPopMatrix();
+        
+        
+        //chart
+        glColor3f(0,0,0);
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        //X AXIS
+        glBegin(GL_LINES);
+        glVertex3d(0.5,1.,0.0);
+        glVertex3d(10.5,1.,0.0);
+        glEnd();
+        
+        gl_font(FL_TIMES,12);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.),10.,0.0);
+        glVertex3d(1+(9./4.),0.6,0.0);
+        glEnd();
+        gl_draw("1",(float)(0.8+(9./4.)),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*2,1.,0.0);
+        glVertex3d(1+(9./4.)*2,0.8,0.0);
+        glEnd();
+        gl_draw("2",(float)(0.8+(9./4.)*2),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*3,1.,0.0);
+        glVertex3d(1+(9./4.)*3,0.8,0.0);
+        glEnd();
+        gl_draw("3",(float)(0.8+(9./4.)*3),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*4,1.,0.0);
+        glVertex3d(1+(9./4.)*4,0.8,0.0);
+        glEnd();
+        gl_draw("4",(float)(0.8+(9./4.)*4),(float)0.3);
+        
+        
+        
+        
+        //Y AXIS
+        glBegin(GL_LINES);
+        glVertex3d(1,1.,0.0);
+        glVertex3d(1,10.,0.0);
+        glEnd();
+        
+        
+        glPopMatrix();
+        
+        if(histdist.mean!=atof(meanbuff->text())){
+            /*if(runningcontrol==1){ dm=fabs(atof(meanbuff->text())-histdist.mean);
+             sprintf(textstring,"%f", dm);
+             dmeanbuff->text(textstring);}*/
+            hism=histdist.mean;
+            sprintf(textstring,"%f", hism);
+            meanbuff->text(textstring);
+            
+        }
+        
+        if(histdist.variance!=atof(varbuff->text())){
+            /* if(runningcontrol==1){
+             dv=fabs(atof(varbuff->text())-histdist.variance);
+             sprintf(textstring,"%f", dv);
+             dvarbuff->text(textstring);}*/
+            hisv=histdist.variance;
+            sprintf(textstring,"%f", hisv);
+            varbuff->text(textstring);}
+        
+        
+        
+    }
+    
+    else {
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        if(*(meanbuff->text())!='n'){
+            sprintf(textstring,"not computable");
+            meanbuff->text(textstring);
+        }
+        
+        
+        if(*(varbuff->text())!='n'){
+            sprintf(textstring,"not computable");
+            varbuff->text(textstring);
+        }
+        
+        /*if(*(dmeanbuff->text())!='n'){
+         sprintf(textstring,"not computable");
+         dmeanbuff->text(textstring);
+         }
+         
+         if(*(dvarbuff->text())!='n'){
+         sprintf(textstring,"not computable");
+         dvarbuff->text(textstring);
+         }*/
+        
+        
+        
+        
+        glClearColor(0., 0., 0., 1);
+        
+    }
+    
+    
+}

@@ -124,10 +124,10 @@ void turbocb(Fl_Widget *, void *);
 void cstopcb(Fl_Widget *, void *);
 void cstop();
 
-//fluctuations window
-void FluctWindow(void);
-void fluctuationscb(Fl_Widget *, void *);
-void exitfluctcb(Fl_Widget *, void *) ;
+//data window
+void DataWindow(void);
+void datacb(Fl_Widget *, void *);
+void exitdatacb(Fl_Widget *, void *) ;
 
 
 //----- GENERATE MAIN WINDOW
