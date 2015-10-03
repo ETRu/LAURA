@@ -413,6 +413,28 @@ void draw_datascene(void){
     
     glPushMatrix();
     glTranslated(0,0,0);
+        
+        
+        
+        
+        
+        glColor3f(0,0,0);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0, 11, 0.0f);              // Top Left
+        glVertex3f(11, 11, 0.0f);              // Top Right
+        glVertex3f(11,0, 0.0f);              // Bottom Right
+        glVertex3f(0,0, 0.0f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+        
+        
+        glColor3f(1.,1.,1.);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0.05, 10.95, 0.1f);              // Top Left
+        glVertex3f(10.95, 10.95, 0.1f);              // Top Right
+        glVertex3f(10.95,0.05, 0.1f);              // Bottom Right
+        glVertex3f(0.05,0.05, 0.1f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+        
     
     
     
@@ -427,19 +449,19 @@ void draw_datascene(void){
        if(ytl>1){
         glColor3f(0,0,0);
         glBegin(GL_QUADS);                      // Draw A Quad
-        glVertex3f(xtl, ytl, 0.0f);              // Top Left
-        glVertex3f(xtr, ytr, 0.0f);              // Top Right
-        glVertex3f(xbr,ybr, 0.0f);              // Bottom Right
-        glVertex3f(xbl,ybl, 0.0f);              // Bottom Left
+        glVertex3f(xtl, ytl, 0.2f);              // Top Left
+        glVertex3f(xtr, ytr, 0.2f);              // Top Right
+        glVertex3f(xbr,ybr, 0.2f);              // Bottom Right
+        glVertex3f(xbl,ybl, 0.2f);              // Bottom Left
         glEnd();                            // Done Drawing The Quad
         
         //inner
         glColor3f(1,0,0);
         glBegin(GL_QUADS);
-        glVertex3f(xtl+0.05, ytl-0.05, 0.1f);
-        glVertex3f(xtr-0.05, ytr-0.05, 0.1f);
-        glVertex3f(xbr-0.05, ybr+0.05, 0.1f);
-        glVertex3f(xbl+0.05, ybl+0.05, 0.1f);
+        glVertex3f(xtl+0.05, ytl-0.05, 0.3f);
+        glVertex3f(xtr-0.05, ytr-0.05, 0.3f);
+        glVertex3f(xbr-0.05, ybr+0.05, 0.3f);
+        glVertex3f(xbl+0.05, ybl+0.05, 0.3f);
         glEnd();
         }
     }
@@ -449,8 +471,8 @@ void draw_datascene(void){
         
         glColor3f(0,1,0);
         glBegin(GL_LINES);
-        glVertex3d(1+(9./4.)*(histdist.mean),10.,0.0);
-        glVertex3d(1+(9./4.)*(histdist.mean),0.6,0.0);
+        glVertex3d(1+(9./4.)*(histdist.mean),10.,0.4f);
+        glVertex3d(1+(9./4.)*(histdist.mean),0.6,0.4f);
         glEnd();
         gl_font(FL_TIMES,12);
         gl_draw("Mean",(float)(0+(9./4.)*(histdist.mean)),(float)10.);
@@ -467,33 +489,33 @@ void draw_datascene(void){
    
     //X AXIS
     glBegin(GL_LINES);
-    glVertex3d(0.5,1.,0.0);
-    glVertex3d(10.5,1.,0.0);
+    glVertex3d(0.5,1.,0.5f);
+    glVertex3d(10.5,1.,0.5f);
     glEnd();
         
          gl_font(FL_TIMES,12);
         
         glBegin(GL_LINES);
-        glVertex3d(1+(9./4.),10.,0.0);
-        glVertex3d(1+(9./4.),0.6,0.0);
+        glVertex3d(1+(9./4.),10.,0.6f);
+        glVertex3d(1+(9./4.),0.6,0.6f);
         glEnd();
         gl_draw("1",(float)(0.8+(9./4.)),(float)0.3);
         
         glBegin(GL_LINES);
-        glVertex3d(1+(9./4.)*2,1.,0.0);
-        glVertex3d(1+(9./4.)*2,0.8,0.0);
+        glVertex3d(1+(9./4.)*2,1.,0.6f);
+        glVertex3d(1+(9./4.)*2,0.8,0.6f);
         glEnd();
         gl_draw("2",(float)(0.8+(9./4.)*2),(float)0.3);
         
         glBegin(GL_LINES);
-        glVertex3d(1+(9./4.)*3,1.,0.0);
-        glVertex3d(1+(9./4.)*3,0.8,0.0);
+        glVertex3d(1+(9./4.)*3,1.,0.6f);
+        glVertex3d(1+(9./4.)*3,0.8,0.6f);
         glEnd();
         gl_draw("3",(float)(0.8+(9./4.)*3),(float)0.3);
         
         glBegin(GL_LINES);
-        glVertex3d(1+(9./4.)*4,1.,0.0);
-        glVertex3d(1+(9./4.)*4,0.8,0.0);
+        glVertex3d(1+(9./4.)*4,1.,0.6f);
+        glVertex3d(1+(9./4.)*4,0.8,0.6f);
         glEnd();
         gl_draw("4",(float)(0.8+(9./4.)*4),(float)0.3);
         
@@ -502,9 +524,10 @@ void draw_datascene(void){
         
     //Y AXIS
     glBegin(GL_LINES);
-    glVertex3d(1,1.,0.0);
-    glVertex3d(1,10.,0.0);
+    glVertex3d(1,1.,0.7f);
+    glVertex3d(1,10.,0.7f);
     glEnd();
+
         
         
     glPopMatrix();
@@ -563,6 +586,8 @@ void draw_datascene(void){
         glClearColor(0., 0., 0., 1);
     
     }
+    
+
     
     
 }

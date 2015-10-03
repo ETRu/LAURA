@@ -80,7 +80,7 @@ extern int viewingdata;
 #define LEFT_SPACE COLWIDTH*2+2*BORDER1
 #define RIGHT_SPACE COLWIDTH+BORDER1
 
-#define DATAWINWIDTH 600
+#define DATAWINWIDTH 3*BUTTON_L + 3*BORDER1 + 2*10
 
 #define BUTTON_WL 100
 #define BUTTON_WR 100
@@ -157,6 +157,7 @@ Fl_Text_Buffer      *dvarbuff;
 Fl_Text_Buffer      *dmeanbuff;
 
 Fl_Group *histogroup;
+Fl_Group *actigroup1;
 Fl_Check_Button *drawhistobutton;
 Fl_Text_Display *meandisp;
 Fl_Text_Display *vardisp;
@@ -2349,8 +2350,8 @@ void DataWindow(void) {
     
     datawindow=   new Fl_Window(w_est,h_est,"LAURA - Data Window");
 
-    xpos=10;
-    ypos=5;
+    xpos=BORDER1;
+    ypos=BORDER1;
     
     
     
@@ -2491,35 +2492,40 @@ void DataWindow(void) {
     
     // II DATA COLUMN
     
-    xpos=xpos+BUTTON_L+10;
-    ypos=5;
-    
-    
+    xpos=BUTTON_L+20+2*BORDER1;
+    ypos=BORDER1;
+
     widgh=BUTTON_H1;
-    Fl_Box *myfluctbox = new Fl_Box(xpos,ypos,widgw,widgh, " Activation ");
+    Fl_Box *myfluctbox = new Fl_Box(xpos+BUTTON_L-widgw/2,ypos,widgw,widgh, " Activation ");
     myfluctbox->labelsize(16);
     myfluctbox->labelfont(FL_BOLD);
     myfluctbox->box(FL_ROUNDED_BOX);
     ypos=ypos+widgh;
+    
+    
+    ypos=ypos+10;
+    actigroup1 = new Fl_Group(xpos-5,ypos-5,2*BUTTON_L+10,BUTTON_L+20, "");
+    actigroup1->align(FL_ALIGN_TOP_LEFT);
+    actigroup1->labelfont(FL_BOLD);
+    actigroup1->box(FL_BORDER_BOX);
+    actigroup1->color(FL_LIGHT2);
+    
     ypos=ypos+5;
-    
-    
-    widgh=widgw;
+    widgh=BUTTON_L;
+    widgw=2*BUTTON_L;
     fluctscene =  new FluctFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
     
-    widgh=BUTTON_H1;
+    /*
+     widgh=BUTTON_H1;
     ypos=ypos+10;
     Fl_Button *closeit = new Fl_Button(xpos, ypos, widgw, widgh, "CLOSE");
     ypos=ypos+widgh;
+    */
     
     
-    
-    
-    
-    
-    closeit->callback(exitdatacb,0);
+    //closeit->callback(exitdatacb,0);
     
     if(ypos+5 > h_est){
         h_est=ypos+5;
