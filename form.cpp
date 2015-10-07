@@ -8,6 +8,7 @@ extern igraph_matrix_t layout;
 extern igraph_matrix_t density, densityold, state, statenew, loadedstate;
 extern igraph_vector_t gain;
 extern igraph_matrix_t loss;
+extern igraph_matrix_t dissipation;
 
 extern int latticedim;
 extern int latticeside;
@@ -132,13 +133,16 @@ Fl_Check_Button *drawnodes;
 Fl_Check_Button *drawlinks;
 Fl_Check_Button *drawfluxes;
 Fl_Button *clearbutton;
-Fl_Check_Button *printdatabutton;
 Fl_Button *turbobutton;
 
-// button in right column 1
-/*Fl_Button *bnewlattice;
- Fl_Button *bnewrandom;
- Fl_Button *bnewclustered;*/
+
+// right column buttns
+
+
+Fl_Button * datawinbutton;
+Fl_Check_Button *printdatabutton;
+Fl_Check_Button *printcorrbutton;
+
 Fl_Button *bnewnet;
 Fl_Button *bload; Fl_File_Chooser *loadchooser ;
 Fl_Button *bsave; Fl_File_Chooser *savechooser ;
@@ -146,7 +150,27 @@ Fl_Button *bsaveas;
 Fl_Button *bsetlayout;
 Fl_Button *buttonexit;
 
-// button in right column 2
+
+
+
+
+//bottom buttons
+Fl_Group *bottomgroup;
+Fl_Round_Button *round1;
+Fl_Round_Button *round2;
+Fl_Round_Button *round3;
+Fl_Group *palettegroup;
+Fl_Round_Button *palette0;
+Fl_Round_Button *palette1;
+Fl_Round_Button *palette2;
+Fl_Text_Buffer *pathbuff;
+Fl_Text_Display *pathdisp;
+extern igraph_vector_t statstate;
+
+
+
+
+// DATA WINDOW buttons
 DataFrame        *datascene;
 Fl_Text_Buffer      *databuff;
 Fl_Text_Display *datadisp;
@@ -171,22 +195,6 @@ Fl_Text_Display *dmeandisp;
 Fl_Text_Display *dvardisp;
 Fl_Button *printbutton1;
 Fl_Button *cstopbutton;
-
-Fl_Button * datawinbutton;
-
-
-//bottom buttons
-Fl_Group *bottomgroup;
-Fl_Round_Button *round1;
-Fl_Round_Button *round2;
-Fl_Round_Button *round3;
-Fl_Group *palettegroup;
-Fl_Round_Button *palette0;
-Fl_Round_Button *palette1;
-Fl_Round_Button *palette2;
-Fl_Text_Buffer *pathbuff;
-Fl_Text_Display *pathdisp;
-extern igraph_vector_t statstate;
 
 //--------------------- dialogues  ---------------------
 #define DIAL_W 200
@@ -924,6 +932,7 @@ void generatelatticecb(Fl_Widget *, void *) {
     igraph_matrix_init(&density, 0, 0); igraph_matrix_init(&densityold,0,0);
     igraph_matrix_init(&statenew, 0, 0);
     igraph_matrix_init(&loss, 0, 0);
+    igraph_matrix_init(&dissipation,0,0);
     
     beginner=(nodesnumber/2); in5->value(beginner);
     InitialStateTAS(beginner,0,totrun);
@@ -1095,7 +1104,7 @@ void generaterandom1cb(Fl_Widget *, void *) {
         igraph_matrix_init(&densityold,0,0);
         igraph_matrix_init(&statenew, 0, 0);
         igraph_matrix_init(&loss, 0, 0);
-        
+        igraph_matrix_init(&dissipation,0,0);
         //beginner=0;
         in5->value(beginner);
         InitialStateTAS(beginner,0,totrun);
@@ -1307,6 +1316,7 @@ void generateclustsymcb(Fl_Widget *, void *) {
         igraph_matrix_init(&densityold,0,0);
         igraph_matrix_init(&statenew, 0, 0);
         igraph_matrix_init(&loss, 0, 0);
+        igraph_matrix_init(&dissipation,0,0);
         
         igraph_vector_init(&gain,nodesnumber);
         
@@ -1597,6 +1607,8 @@ void generateclusger2cb(Fl_Widget *, void *) {
         printf("init statenew, "); fflush(stdout);;
         igraph_matrix_init(&loss, 0, 0);
         printf("init loss, "); fflush(stdout);
+        
+        igraph_matrix_init(&dissipation,0,0);
         
         igraph_vector_init(&gain,nodesnumber);
         printf("init gain. "); fflush(stdout);
@@ -2074,6 +2086,9 @@ void loadcb(Fl_Widget *, void *) {
         havepath=1; rewrite=1;
 
         igraph_matrix_init(&loss, 0, 0);
+        
+        igraph_matrix_init(&dissipation,0,0);
+        
         igraph_vector_init(&gain,nodesnumber);
         
         
@@ -2823,12 +2838,7 @@ void CreateMyWindow(void) {
     ypos=ypos+widgh;
     
     
-    ypos=ypos+10;
-    
-    widgh=BUTTON_H1;
-    printdatabutton = new Fl_Check_Button(xpos,ypos,BUTTON_WL,widgh,"Print Data");
-    printdatabutton->value(1);
-    ypos=ypos+widgh;
+
     
     widgh=BUTTON_H;
     ypos=ypos+5;
@@ -2933,6 +2943,16 @@ void CreateMyWindow(void) {
     datawinbutton = new Fl_Button(xpos,ypos,widgw,widgh, "Data Window");
     ypos=ypos+widgh;
     
+    widgh=BUTTON_H1;
+    printdatabutton = new Fl_Check_Button(xpos,ypos,BUTTON_WL,widgh,"Print Data");
+    printdatabutton->value(1);
+    ypos=ypos+widgh;
+    
+    ypos=ypos-5;
+    widgh=BUTTON_H1;
+    printcorrbutton = new Fl_Check_Button(xpos,ypos,BUTTON_WL,widgh,"Print Corr.");
+    printcorrbutton->value(0);
+    ypos=ypos+widgh;
     
     ypos=ypos+20;
     

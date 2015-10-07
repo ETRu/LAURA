@@ -88,6 +88,9 @@ igraph_matrix_t bridgeslinks;//links
 igraph_vector_t gain; igraph_matrix_t loss; //"gain"&"loss" vector (how many particles the i-th node gains/loses).
 igraph_vector_t statstate;  //stationary state of the network (eigenvec of eigenval 1)
 
+igraph_matrix_t dissipation;
+
+
 igraph_matrix_t admatrix;   //ADJACENCE MATRIX
 
 igraph_matrix_t estates;    //EIGENSTATES OF ADMATRIX
@@ -182,7 +185,7 @@ extern Fl_Text_Buffer      *tickbuff;
 
 extern Fl_Light_Button *drawbutton;
 extern Fl_Check_Button *printdatabutton;
-
+extern Fl_Check_Button *printcorrbutton;
 
 
 /*
@@ -217,6 +220,10 @@ void mainidle_cb(void*){    //this routine updates the program.
     char s[100];
     
     
+    
+    
+    
+    
     // ---- running controls AND PRINTING
     if(
        (amstepping==0 && runningcontrol==1 && graphisloaded==1 && ticks<=maxtime ) ||
@@ -225,26 +232,29 @@ void mainidle_cb(void*){    //this routine updates the program.
     
     {
   
+        //EVOLUTION STEP
         Evolution(deltat);
+        
         
         //PRINTS
         if((int)printdatabutton->value()==1){
+          
             
-            //if have steady state
+            
+            
+            
+            igraph_matrix_t activation;
+            igraph_matrix_init(&activation,nodesnumber,totrun);
+            igraph_matrix_null(&activation);
+            
+          
+            //---------------------------------------------------------------------- if have steady state
             if(usesteady==1){
-                
-                igraph_matrix_t activation;
-                igraph_matrix_init(&activation,nodesnumber,totrun);
-                igraph_matrix_null(&activation);
-                
-                igraph_vector_t correlation;
-                igraph_vector_init(&correlation,(nodesnumber*nodesnumber)); igraph_vector_null(&correlation);
-
                 
                 fprintf(output1,"%i ", ticks);
                 fprintf(output2,"%i ", ticks);
                 fprintf(output5,"%i ", ticks);
-                fprintf(output6,"%i ", ticks);
+
                 
                 totdens=0; toterr=0;
                 for(int i=0;i<nodesnumber;++i){
@@ -256,7 +266,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                         err=err+((VECTOR(statstate)[i]-MATRIX(density,i,j))*(VECTOR(statstate)[i]-MATRIX(density,i,j)));
                         shooted=shooted+MATRIX(loss,i,j);
 
-                        if(MATRIX(loss,i,j)!=0){++MATRIX(activation,i,j);}
+                        if(MATRIX(loss,i,j)!=0 && MATRIX(loss,i,j)!=MATRIX(dissipation,i,j)){++MATRIX(activation,i,j);}
                     }
                     
                     dens=dens/totrun;
@@ -275,44 +285,8 @@ void mainidle_cb(void*){    //this routine updates the program.
                 fprintf(output1,"%f ",totdens);
                 fprintf(output2,"%f ",toterr);
                 
+              
                 
-               // printf("\n\n ACTIVATION MATRIX \n \n"); print_matrix_ur(&activation,stdout); printf("\n\n");
-                
-                
-                
-                // ---- CORRELATION ---
-                
-                igraph_vector_t meanactivation;
-                igraph_vector_init(&meanactivation,nodesnumber);
-                igraph_vector_null(&meanactivation);
-                //calculate mean activation
-                for (int j=0; j<totrun; ++j) {
-                    for (int i=0; i<nodesnumber; ++i) {
-                        VECTOR(meanactivation)[i]=VECTOR(meanactivation)[i]+MATRIX(activation,i,j);
-                    }
-                }
-                igraph_vector_scale(&meanactivation,1./totrun);
-                
-                //calculate actual correlation
-                for (int x=0; x<nodesnumber ; ++x) {
-                    for(int y=0; y<nodesnumber; ++y){
-                        
-                        double prod=0;
-                        for (int j=0; j<totrun; ++j) {
-                            prod=prod+ ( MATRIX(activation,x,j)*MATRIX(activation,y,j) );
-                        }
-                        prod=prod/totrun;
-                        
-                        VECTOR(correlation)[(x*nodesnumber+y)] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
-                        
-                    }
-                }
-                
-                igraph_vector_destroy(&meanactivation);
-                
-                for (int i=0; i<(nodesnumber*nodesnumber); ++i) {
-                    fprintf(output6,"%f ",VECTOR(correlation)[i]);
-                }
                 
                 
                 
@@ -357,7 +331,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                 fprintf(output1,"\n");
                 fprintf(output2,"\n");
                 fprintf(output5,"\n");
-                fprintf(output6,"\n");
+
                 
                 
                 
@@ -386,10 +360,6 @@ void mainidle_cb(void*){    //this routine updates the program.
                 
                 
                 
-                igraph_matrix_destroy(&activation);
-                igraph_vector_destroy(&correlation);
-                
-                
             }
             
             //if i HAVENT STEADY STATE
@@ -404,6 +374,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                     for(int j=0; j<totrun; ++j){
                         dens=dens+MATRIX(density,i,j);
                         shooted=shooted+MATRIX(loss,i,j);
+                        if(MATRIX(loss,i,j)!=0 && MATRIX(loss,i,j)!=MATRIX(dissipation,i,j)){++MATRIX(activation,i,j);}
                     }
                     dens=dens/totrun;
                     shooted=shooted/totrun;
@@ -416,6 +387,75 @@ void mainidle_cb(void*){    //this routine updates the program.
                 fprintf(output5,"\n");
                 
             }
+            
+            
+            
+            // ---------------------------------- CORRELATION ---
+            
+  
+            if((int)printcorrbutton->value()==1) {
+                
+                
+               // print_matrix_ur(&activation,stdout);
+                
+                
+            fprintf(output6,"%i ", ticks);
+            
+                
+            igraph_vector_t correlation;
+            igraph_vector_init(&correlation,(nodesnumber*nodesnumber));
+            igraph_vector_null(&correlation);
+            
+            igraph_vector_t meanactivation;
+            igraph_vector_init(&meanactivation,nodesnumber);
+            igraph_vector_null(&meanactivation);
+                
+                
+            //calculate mean activation
+            for (int j=0; j<totrun; ++j) {
+                for (int i=0; i<nodesnumber; ++i) {
+                    VECTOR(meanactivation)[i]=VECTOR(meanactivation)[i]+MATRIX(activation,i,j);
+                }
+            }
+            igraph_vector_scale(&meanactivation,1./totrun);
+            
+            //calculate actual correlation
+            for (int x=0; x<nodesnumber ; ++x) {
+                for(int y=0; y<nodesnumber; ++y){
+                    
+                    double prod=0;
+                    for (int j=0; j<totrun; ++j) {
+                        prod=prod+ ( MATRIX(activation,x,j)*MATRIX(activation,y,j) );
+                    }
+                    prod=prod/totrun;
+                    
+                    VECTOR(correlation)[(x*nodesnumber+y)] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
+                    
+                }
+            }
+            
+            igraph_vector_destroy(&meanactivation);
+            
+            for (int i=0; i<(nodesnumber*nodesnumber); ++i) {
+                fprintf(output6,"%f ",VECTOR(correlation)[i]);
+            }
+            
+            
+            fprintf(output6,"\n");
+            
+            
+            
+            
+            igraph_vector_destroy(&correlation);
+            }
+            
+            
+            
+            
+            
+            igraph_matrix_destroy(&activation);
+            
+            
             
             
         }
@@ -526,6 +566,9 @@ int main(int argc, char **argv) {
         igraph_matrix_init(&statenew, 0, 0);
         igraph_matrix_init(&flux, 0, 0);
         igraph_matrix_init(&loss, 0, 0);
+        
+        igraph_matrix_init(&dissipation,0,0);
+        
         beginner=(nodesnumber/2);
         InitialStateTAS(beginner,0,totrun);
         igraph_vector_init(&gain,nodesnumber);
@@ -574,6 +617,7 @@ int main(int argc, char **argv) {
     igraph_matrix_destroy(&flux);
     igraph_vector_destroy(&gain);
     igraph_matrix_destroy(&loss);
+    igraph_matrix_destroy(&dissipation);
     igraph_vector_destroy(&statstate);
     igraph_matrix_destroy(&estates);
     
