@@ -55,6 +55,8 @@ extern double hism, hisv;
  extern Fl_Value_Input *invarstop;
  extern Fl_Value_Input *inmeanerstop;
  extern Fl_Value_Input *invarerstop;
+
+extern igraph_vector_t tactvect;
  
  
 //------------------------------------------------------------------------------
@@ -547,7 +549,7 @@ void TurboRun(double dt){
     
     int time;
     
-    double totactivity;
+   extern double totactivity;
     
     double tempreal, dontmove;
     
@@ -757,12 +759,11 @@ void TurboRun(double dt){
             totreldens=totreldens/nodesnumber;
             totrelerr=totrelerr/nodesnumber;
             
-            totactivity=igraph_matrix_sum(&activation);
-            totactivity=totactivity/(nodesnumber*totrun);
+
             
             fprintf(output1,"%f %f ",totdens, totreldens);
             fprintf(output2,"%f %f ",toterr, totrelerr);
-            fprintf(output7,"%f",totactivity);
+
             
             
             
@@ -809,7 +810,6 @@ void TurboRun(double dt){
             fprintf(output1,"\n");
             fprintf(output2,"\n");
             fprintf(output5,"\n");
-            fprintf(output7,"\n");
             
             
             
@@ -890,6 +890,11 @@ void TurboRun(double dt){
         
         
         
+        // ---------------------------------- TOTAL ACTIVITY    ------------
+        
+        totactivity=igraph_matrix_sum(&activation);
+        totactivity=totactivity/(nodesnumber*totrun);
+        fprintf(output7,"%f\n",totactivity);
         
         
         // ---------------------------------- CORRELATION ---

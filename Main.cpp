@@ -143,6 +143,7 @@ int havecstop;      //do i have a stop condition?
 int isrelaxed;      //has my system relaxed according to the stop condition?
 int isdissipating;  //do I have a dissipation node?
 
+
 int havepath;       //do I have a path for my job?
 int haveout;        //do I have a working output file?
 
@@ -171,6 +172,13 @@ char errorstring[100];  //string containing the ERROR MESSAGE dispayed
 LAURA_Histogram_1D histdist;
 double dm, dv;
 
+double  totactivity;
+double  meanactivity;
+
+int     windowrm;       //dimension of the running mean window
+
+igraph_vector_t tactvect;   //vector containing the history of the mean activities registered
+float tactcoord[1000*2];
 
 
 
@@ -222,8 +230,6 @@ void mainidle_cb(void*){    //this routine updates the program.
     
     
     
-    
-    
     // ---- running controls AND PRINTING
     if(
        (amstepping==0 && runningcontrol==1 && graphisloaded==1 && ticks<=maxtime ) ||
@@ -256,7 +262,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                 fprintf(output5,"%i ", ticks);
 
                 
-                totdens=0; toterr=0;
+                totdens=0; toterr=0; totactivity=0;
                 for(int i=0;i<nodesnumber;++i){
                     shooted=0;
                     dens=0;
@@ -368,6 +374,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                 fprintf(output1,"%i ", ticks);
                 fprintf(output5,"%i ", ticks);
                 
+                totdens=0; toterr=0; totactivity=0;
                 for(int i=0;i<nodesnumber;++i){
                     shooted=0;
                     dens=0;
@@ -390,7 +397,15 @@ void mainidle_cb(void*){    //this routine updates the program.
             
             
             
-            // ---------------------------------- CORRELATION ---
+            // ---------------------------------- TOTAL ACTIVITY    ------------
+            
+            totactivity=igraph_matrix_sum(&activation);
+            totactivity=totactivity/(nodesnumber*totrun);
+            fprintf(output7,"%f\n",totactivity);
+            
+            igraph_vector_push_back(&tactvect, totactivity);
+            
+            // ---------------------------------- CORRELATION       ------------
             
   
             if((int)printcorrbutton->value()==1) {
@@ -531,7 +546,6 @@ int main(int argc, char **argv) {
         igraph_i_set_attribute_table(&igraph_cattribute_table);
     
     
-    
     drawingcontrol=1;
 	runningcontrol=0;
     cleared=1;
@@ -545,6 +559,7 @@ int main(int argc, char **argv) {
     isdissipating=0;
     viewingdata=0;
     
+    igraph_vector_init(&tactvect,0);
     
     //RANDOM NUMBER GENERATOR INITIALISE
     init_genrand(0); //srand(3);
@@ -559,6 +574,9 @@ int main(int argc, char **argv) {
         isclustered=0;
         israndomER1=0;
         generatelattice(2,5,1,0,0,0,0);
+        
+        windowrm=10;
+        
         //inizializations
         igraph_matrix_init(&state, 0, 0);
         igraph_matrix_init(&density, 0, 0);
@@ -620,6 +638,7 @@ int main(int argc, char **argv) {
     igraph_matrix_destroy(&dissipation);
     igraph_vector_destroy(&statstate);
     igraph_matrix_destroy(&estates);
+    igraph_vector_destroy(&tactvect);
     
     closeout();
     

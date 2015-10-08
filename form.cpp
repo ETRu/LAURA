@@ -72,6 +72,8 @@ extern int error;
 extern char errorstring[100];
 
 extern int viewingdata;
+extern int windowrm;
+extern igraph_vector_t tactvect;
 
 //main window defines-----------------------
 #define BORDER1 20
@@ -171,14 +173,16 @@ extern igraph_vector_t statstate;
 
 
 // DATA WINDOW buttons
+
 DataFrame        *datascene;
+
+// HISTOGRAM COLUMN
 Fl_Text_Buffer      *databuff;
 Fl_Text_Display *datadisp;
 
 Fl_Text_Buffer      *varbuff;
 Fl_Text_Buffer      *meanbuff;
-Fl_Text_Buffer      *dvarbuff;
-Fl_Text_Buffer      *dmeanbuff;
+
 
 Fl_Group *histogroup;
 Fl_Group *actigroup1;
@@ -195,6 +199,11 @@ Fl_Text_Display *dmeandisp;
 Fl_Text_Display *dvardisp;
 Fl_Button *printbutton1;
 Fl_Button *cstopbutton;
+
+// ACTIVATION COLUMN
+Fl_Value_Input      *inwindowrunningmean;
+Fl_Text_Buffer      *dvarbuff;
+Fl_Text_Buffer      *dmeanbuff;
 
 //--------------------- dialogues  ---------------------
 #define DIAL_W 200
@@ -1836,6 +1845,7 @@ void run(){
             threshold=(int)inthreshold->value();
             totrun=(int)in3->value();
             maxtime=(int)in4->value();
+            windowrm=(int)inwindowrunningmean->value();
             
             deltat=(double)indt->value();
            
@@ -1964,6 +1974,10 @@ void clear(){
     in5->maximum(igraph_vcount(&graph)-1);
     
     deltat=(double)indt->value();
+    
+    
+    
+    igraph_vector_clear(&tactvect);
     
  
     if ( (int)roundTAS->value()==1 ){
@@ -2511,12 +2525,21 @@ void DataWindow(void) {
     ypos=BORDER1;
 
     widgh=BUTTON_H1;
-    Fl_Box *myfluctbox = new Fl_Box(xpos+BUTTON_L-widgw/2,ypos,widgw,widgh, " Activation ");
+    Fl_Box *myfluctbox = new Fl_Box(xpos,ypos,widgw,widgh, " Activation ");
     myfluctbox->labelsize(16);
     myfluctbox->labelfont(FL_BOLD);
     myfluctbox->box(FL_ROUNDED_BOX);
-    ypos=ypos+widgh;
+
+    xpos=xpos+widgw+100;
+    widgw=50;
+    inwindowrunningmean = new Fl_Value_Input(xpos,ypos,widgw,widgh, "RM Window:");
+    inwindowrunningmean->step(1);
+    inwindowrunningmean->minimum(1);
+    inwindowrunningmean->maximum(100000000000);
+    inwindowrunningmean->value(windowrm);
     
+    xpos=BUTTON_L+20+2*BORDER1;
+    ypos=ypos+widgh;
     
     ypos=ypos+10;
     actigroup1 = new Fl_Group(xpos-5,ypos-5,2*BUTTON_L+10,BUTTON_L+20, "");
@@ -2531,6 +2554,11 @@ void DataWindow(void) {
     fluctscene =  new FluctFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
+
+    
+    
+    
+    
     
     /*
      widgh=BUTTON_H1;
@@ -2542,6 +2570,8 @@ void DataWindow(void) {
     
     //closeit->callback(exitdatacb,0);
     
+    
+    // RESIZE WINDOW
     if(ypos+5 > h_est){
         h_est=ypos+5;
         datawindow->size(w_est,h_est);

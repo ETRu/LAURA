@@ -69,7 +69,7 @@ void FluctFrame::draw() {
         glViewport(0,0,w(),h());                               // Make our viewport the whole window
         glMatrixMode(GL_PROJECTION);                           // Select The Projection Matrix
         glLoadIdentity();                                      // Reset The Projection Matrix
-        gluOrtho2D(framexmin,framexmax,frameymin,frameymax);                             // (xmin,xmax,ymin,ymax)
+        gluOrtho2D(2*framexmin,2*framexmax,frameymin,frameymax);                             // (xmin,xmax,ymin,ymax)
         //gluPerspective(45.0f,w()/h(), 1 ,150.0);
         glMatrixMode(GL_MODELVIEW);                            // Select The Modelview Matrix
         glLoadIdentity();                                      // Reset The Modelview Matrix
