@@ -46,7 +46,8 @@ extern int usesteady;
 
 extern int runningcontrol;
 
-
+extern int tactdisp;
+extern int windowrm;
 
 int ticked;         //has time passed?
 int lastick;
@@ -79,7 +80,10 @@ extern LAURA_Histogram_1D histdist;
 extern double hism, hisv;
 
 extern igraph_vector_t tactvect;
-extern float tactcoord[10000*3];
+extern igraph_vector_t fluctvect;
+float tactcoord[MAXTACTREG*3];
+extern LAURA_Histogram_1D histtact;
+extern LAURA_Histogram_1D histfluct;
 
 
 //Color (hue) Functions
@@ -609,17 +613,17 @@ void draw_datascene(void){
 
 
 
-/**********************************************                    ****************************************
- **********************************************                    ****************************************
- **********************************************  FLUCTATIONS DRAW  ****************************************
- **********************************************                    ****************************************
- **********************************************                    ****************************************
+/**********************************************                         ****************************************
+ **********************************************                         ****************************************
+ **********************************************  ACTIVATION CHART DRAW  ****************************************
+ **********************************************                         ****************************************
+ **********************************************                         ****************************************
  */
 
 
 
 
-void draw_fluctinit(void){
+void draw_tactinit(void){
     
     
 }
@@ -628,7 +632,7 @@ void draw_fluctinit(void){
 
 
 
-void draw_fluctscene(void){
+void draw_tactscene(void){
     
     
     char textstring[100];
@@ -636,20 +640,25 @@ void draw_fluctscene(void){
     
     double xtl, xtr, xbl, xbr, ytl, ytr, ybl, ybr;
     //maxmum is 8 points in height.
-
+    
     double span=20;
     double hone=8;
     double dist;
-
     
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(1., 1., 1., 1);
-        
-        
-        //chart
-        glColor3f(0,0,0);
-        glPushMatrix();
-        glTranslated(0,0,0);
+    int tickstodraw;
+    
+    tickstodraw=ticks;
+    if(ticks > tactdisp){tickstodraw=tactdisp;}
+    
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(1., 1., 1., 1);
+    
+    
+    //chart
+    glColor3f(0,0,0);
+    glPushMatrix();
+    glTranslated(0,0,0);
     
     
     glColor3f(0,0,0);
@@ -669,96 +678,118 @@ void draw_fluctscene(void){
     glVertex3f(0.05,0.05, 0.05f);              // Bottom Left
     glEnd();                            // Done Drawing The Quad
     
-        glColor3f(0.,0.,0.);
+    glColor3f(0.,0.,0.);
     
     
-        //X AXIS
-        glBegin(GL_LINES);
-        glVertex3d(1,1.,0.1f);
-        glVertex3d(span+2*0.5,1.,0.1f);
-        glEnd();
-        
-        gl_font(FL_TIMES,10);
+    //X AXIS
+    glBegin(GL_LINES);
+    glVertex3d(1,1.,0.1f);
+    glVertex3d(span+2*0.5,1.,0.1f);
+    glEnd();
     
-        // print last x ticks
-        glBegin(GL_LINES);
-        glVertex3d(1+span,1.,0.4f);
-        glVertex3d(1+span,0.8,0.4f);
-        glEnd();
-        sprintf(textstring,"%i",ticks);
-        gl_draw(textstring,(float)(0.8+span),(float)0.3);
+    gl_font(FL_TIMES,10);
     
-        //print half x ticks
-        glBegin(GL_LINES);
-        glVertex3d(1+span/2,1.,0.4f);
-        glVertex3d(1+span/2,0.8,0.4f);
-        glEnd();
-        sprintf(textstring,"%.1f",(float)(ticks)/2);
-        gl_draw(textstring,(float)(0.8+span/2),(float)0.3);
+    // print last x ticks
+    glBegin(GL_LINES);
+    glVertex3d(1+span,1.,0.4f);
+    glVertex3d(1+span,0.8,0.4f);
+    glEnd();
+    sprintf(textstring,"%i",ticks);
+    gl_draw(textstring,(float)(0.8+span),(float)0.3);
+    
+    //print half x ticks
+    glBegin(GL_LINES);
+    glVertex3d(1+span/2,1.,0.4f);
+    glVertex3d(1+span/2,0.8,0.4f);
+    glEnd();
+    sprintf(textstring,"%.1f",(float)(ticks-tickstodraw+ticks)/2);
+    gl_draw(textstring,(float)(0.8+span/2),(float)0.3);
+    
+    // print 0
+    sprintf(textstring,"%i",(ticks-tickstodraw));
+    gl_draw(textstring,(float)(0.8),(float)0.3);
     
     
     
-        //Y AXIS
-        glBegin(GL_LINES);
-        glVertex3d(1,1.,0.5f);
-        glVertex3d(1,10.,0.5f);
-        glEnd();
-        gl_draw("0",(float)0.5,(float)1.);
+    //Y AXIS
+    glBegin(GL_LINES);
+    glVertex3d(1,1.,0.5f);
+    glVertex3d(1,10.,0.5f);
+    glEnd();
+    gl_draw("0",(float)0.5,(float)1.);
+
     
-        glBegin(GL_LINES);
-        glVertex3d(1,1.+hone, 0.1f);
-        glVertex3d(1+span,1.+hone, 0.1f);
-        glEnd();
-        gl_draw("1",(float)0.5,(float)1.+hone);
+    glBegin(GL_LINES);
+    glVertex3d(1,1.+hone, 0.1f);
+    glVertex3d(1+span,1.+hone, 0.1f);
+    glEnd();
+    gl_draw("1",(float)0.5,(float)1.+hone);
     
-        glBegin(GL_LINES);
-        glVertex3d(1,1.+hone/2, 0.1f);
-        glVertex3d(1+span,1.+hone/2, 0.1f);
-        glEnd();
-        gl_draw("0.5",(float)0.2,(float)1.+hone/2);
+    glBegin(GL_LINES);
+    glVertex3d(1,1.+hone/2, 0.1f);
+    glVertex3d(1+span,1.+hone/2, 0.1f);
+    glEnd();
+    gl_draw("0.5",(float)0.2,(float)1.+hone/2);
     
     
     
     //DRAW LINE
-  
     
     
-    if(ticks<10000 && ticks>0 && lastick!=ticks){
-       //x
-        dist=(float)span/(float)ticks;
-        for (int i=0; i<ticks; ++i) {
-            tactcoord[3*i]=1+i*dist;
+    
+    if(lastick!=ticks){
+        
+        dist=(float)span/(float)tickstodraw;
+        
+        if(ticks <= tactdisp && ticks > 0){
+            
+            //x
+            for (int i=0; i<=tickstodraw; ++i) {
+                tactcoord[3*i]=1+i*dist;
+            }
+            tactcoord[3*ticks]=1+tickstodraw*dist;
+            //y
+            tactcoord[(3*ticks)+1]=1+VECTOR(tactvect)[ticks-1]*hone;
+            //z
+            tactcoord[(3*ticks)+2]=1;
         }
         
-        tactcoord[3*ticks]=1+ticks*dist;
-        //y
-        tactcoord[(3*ticks)+1]=1+VECTOR(tactvect)[ticks-1];
-        //z
-    tactcoord[(3*ticks)+2]=1;
-    
+        else{
+            // SHIFT y of 1 coord (i.e. of 3)
+            for (int i=0; i<=(tickstodraw-1); ++i) {
+                tactcoord[3*i+1]=tactcoord[3*(i+1)+1];
+            }
+            
+            tactcoord[3*(tickstodraw)]=1+tickstodraw*dist;
+            tactcoord[(3*(tickstodraw))+1]=1+VECTOR(tactvect)[ticks-1]*hone;
+            
+        }
+        
+        
+        
         lastick=ticks;
-    
-    /*
-    printf("\n\n dist = %f   ", dist);
-    for (int i=0; i<ticks; ++i) {
-        printf("%i %f %f (%f) %f \n", i, tactcoord[3*i],tactcoord[3*i+1], VECTOR(tactvect)[i] ,tactcoord[3*i+2]);
+        
+        /*
+         printf("\n\n dist = %f   ", dist);
+         for (int i=0; i<ticks; ++i) {
+         printf("%i %f %f (%f) %f \n", i, tactcoord[3*i],tactcoord[3*i+1], VECTOR(tactvect)[i] ,tactcoord[3*i+2]);
+         }
+         
+         printf("\n\n");
+         printf("\n\n");
+         */
+        
     }
     
-    printf("\n\n");
-    printf("\n\n");
-    */
-    
-    }
-    
-    
+    glColor3f(1,0,0);
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, tactcoord);
-    glDrawArrays(GL_LINE_STRIP, 1, ticks);
+    glDrawArrays(GL_LINE_STRIP, 1, tickstodraw);
     glDisableClientState(GL_VERTEX_ARRAY);
     
-   
-        
-        
+    
+    
+    
     
     
     glPopMatrix();
@@ -767,3 +798,398 @@ void draw_fluctscene(void){
     
     
 }
+
+
+
+
+
+/**********************************************                         ****************************************
+ **********************************************                         ****************************************
+ **********************************************  ACTIVATION  HIST DRAW  ****************************************
+ **********************************************                         ****************************************
+ **********************************************                         ****************************************
+ */
+
+
+
+
+void draw_htactinit(void){
+    
+    
+}
+
+
+
+
+
+void draw_htactscene(void){
+    
+    
+    int nbins=histtact.nbins;
+    float binwidth=9./nbins;
+    
+    char textstring[100];
+    char firstchar;
+    
+    float xtl, xtr, xbl, xbr, ytl, ytr, ybl, ybr;
+    //maxmum is 8 points in height.
+    
+    
+    if(drawhisto==1){
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(1., 1., 1., 1);
+        
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        
+        
+        
+        
+        glColor3f(0,0,0);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0, 11, 0.0f);              // Top Left
+        glVertex3f(11, 11, 0.0f);              // Top Right
+        glVertex3f(11,0, 0.0f);              // Bottom Right
+        glVertex3f(0,0, 0.0f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+        
+        
+        glColor3f(1.,1.,1.);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0.05, 10.95, 0.1f);              // Top Left
+        glVertex3f(10.95, 10.95, 0.1f);              // Top Right
+        glVertex3f(10.95,0.05, 0.1f);              // Bottom Right
+        glVertex3f(0.05,0.05, 0.1f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+      
+        
+        
+        
+        for(int i=0;i<nbins;++i){
+            
+            xtl=1+i*binwidth; ytl=(VECTOR((histtact.bins))[i])*8+1;
+            xtr=1+(1+i)*binwidth; ytr=ytl;
+            xbl=xtl; ybl=1;
+            xbr=xtr; ybr=ybl;
+            
+            //BORDER
+            if(ytl>1){
+                glColor3f(0,0,0);
+                glBegin(GL_QUADS);                      // Draw A Quad
+                glVertex3f(xtl, ytl, 0.2f);              // Top Left
+                glVertex3f(xtr, ytr, 0.2f);              // Top Right
+                glVertex3f(xbr,ybr, 0.2f);              // Bottom Right
+                glVertex3f(xbl,ybl, 0.2f);              // Bottom Left
+                glEnd();                            // Done Drawing The Quad
+                
+                //inner
+                glColor3f(1,0,0);
+                glBegin(GL_QUADS);
+                glVertex3f(xtl+0.05, ytl-0.05, 0.3f);
+                glVertex3f(xtr-0.05, ytr-0.05, 0.3f);
+                glVertex3f(xbr-0.05, ybr+0.05, 0.3f);
+                glVertex3f(xbl+0.05, ybl+0.05, 0.3f);
+                glEnd();
+            }
+        }
+        
+        
+        //draw mean
+        
+        glColor3f(0,1,0);
+        glBegin(GL_LINES);
+        glVertex3d(1+9*(histtact.mean),10.,0.4f);
+        glVertex3d(1+9*(histtact.mean),0.6,0.4f);
+        glEnd();
+        gl_font(FL_TIMES,12);
+        gl_draw("Mean",(float)(0+9*(histtact.mean)),(float)10.);
+        
+        
+        
+        glPopMatrix();
+        
+        
+        //chart
+        glColor3f(0,0,0);
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        //X AXIS
+        glBegin(GL_LINES);
+        glVertex3d(0.5,1.,0.5f);
+        glVertex3d(10.5,1.,0.5f);
+        glEnd();
+        
+        gl_font(FL_TIMES,12);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.),1.,0.6f);
+        glVertex3d(1+(9./4.),0.8,0.6f);
+        glEnd();
+        gl_draw("0.25",(float)(0.8+(9./4.)),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*2,1.,0.6f);
+        glVertex3d(1+(9./4.)*2,0.8,0.6f);
+        glEnd();
+        gl_draw("0.5",(float)(0.8+(9./4.)*2),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*3,1.,0.6f);
+        glVertex3d(1+(9./4.)*3,0.8,0.6f);
+        glEnd();
+        gl_draw("0.75",(float)(0.8+(9./4.)*3),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*4,1.,0.6f);
+        glVertex3d(1+(9./4.)*4,0.6,0.6f);
+        glEnd();
+        gl_draw("1",(float)(0.8+(9./4.)*4),(float)0.3);
+        
+        
+        
+        
+        //Y AXIS
+        glBegin(GL_LINES);
+        glVertex3d(1,1.,0.7f);
+        glVertex3d(1,10.,0.7f);
+        glEnd();
+        
+        
+        
+        glPopMatrix();
+        
+      
+        
+        
+        
+    }
+    
+    else {
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        
+        
+        
+        glClearColor(0., 0., 0., 1);
+        
+    }
+    
+    
+    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/**********************************************                         ****************************************
+ **********************************************                         ****************************************
+ **********************************************  FLUCTATIONS HIST DRAW  ****************************************
+ **********************************************                         ****************************************
+ **********************************************                         ****************************************
+ */
+
+
+
+
+void draw_hfluctinit(void){
+    
+    
+}
+
+
+
+
+
+void draw_hfluctscene(void){
+    
+    
+    int nbins=histfluct.nbins;
+    float binwidth=9./nbins;
+    
+    char textstring[100];
+    char firstchar;
+
+    
+    float xtl, xtr, xbl, xbr, ytl, ytr, ybl, ybr;
+    //maxmum is 8 points in height.
+    
+    
+    if(drawhisto==1)
+    
+    {
+        
+
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(1., 1., 1., 1);
+        
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        
+        
+        
+        
+        glColor3f(0,0,0);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0, 11, 0.0f);              // Top Left
+        glVertex3f(11, 11, 0.0f);              // Top Right
+        glVertex3f(11,0, 0.0f);              // Bottom Right
+        glVertex3f(0,0, 0.0f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+        
+        
+        glColor3f(1.,1.,1.);
+        glBegin(GL_QUADS);                      // Draw A Quad
+        glVertex3f(0.05, 10.95, 0.1f);              // Top Left
+        glVertex3f(10.95, 10.95, 0.1f);              // Top Right
+        glVertex3f(10.95,0.05, 0.1f);              // Bottom Right
+        glVertex3f(0.05,0.05, 0.1f);              // Bottom Left
+        glEnd();                            // Done Drawing The Quad
+        
+        
+        
+        
+        for(int i=0;i<nbins;++i){
+            
+            xtl=1+i*binwidth; ytl=(VECTOR((histfluct.bins))[i])*8+1;
+            xtr=1+(1+i)*binwidth; ytr=ytl;
+            xbl=xtl; ybl=1;
+            xbr=xtr; ybr=ybl;
+            
+            //BORDER
+            if(ytl>1){
+                glColor3f(0,0,0);
+                glBegin(GL_QUADS);                      // Draw A Quad
+                glVertex3f(xtl, ytl, 0.2f);              // Top Left
+                glVertex3f(xtr, ytr, 0.2f);              // Top Right
+                glVertex3f(xbr,ybr, 0.2f);              // Bottom Right
+                glVertex3f(xbl,ybl, 0.2f);              // Bottom Left
+                glEnd();                            // Done Drawing The Quad
+                
+                //inner
+                glColor3f(1,0,0);
+                glBegin(GL_QUADS);
+                glVertex3f(xtl+0.05, ytl-0.05, 0.3f);
+                glVertex3f(xtr-0.05, ytr-0.05, 0.3f);
+                glVertex3f(xbr-0.05, ybr+0.05, 0.3f);
+                glVertex3f(xbl+0.05, ybl+0.05, 0.3f);
+                glEnd();
+            }
+        }
+        
+        
+        //draw mean
+        
+        glColor3f(0,1,0);
+        glBegin(GL_LINES);
+        glVertex3d(1+9*(histfluct.mean),10.,0.4f);
+        glVertex3d(1+9*(histfluct.mean),0.6,0.4f);
+        glEnd();
+        gl_font(FL_TIMES,12);
+        gl_draw("Mean",(float)(0+9*(histfluct.mean)),(float)10.);
+        
+        
+        
+        glPopMatrix();
+        
+        
+        //chart
+        glColor3f(0,0,0);
+        glPushMatrix();
+        glTranslated(0,0,0);
+        
+        //X AXIS
+        glBegin(GL_LINES);
+        glVertex3d(0.5,1.,0.5f);
+        glVertex3d(10.5,1.,0.5f);
+        glEnd();
+        
+        gl_font(FL_TIMES,12);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.),1.,0.6f);
+        glVertex3d(1+(9./4.),0.8,0.6f);
+        glEnd();
+        gl_draw("0.25",(float)(0.8+(9./4.)),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*2,1.,0.6f);
+        glVertex3d(1+(9./4.)*2,0.8,0.6f);
+        glEnd();
+        gl_draw("0.5",(float)(0.8+(9./4.)*2),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*3,1.,0.6f);
+        glVertex3d(1+(9./4.)*3,0.8,0.6f);
+        glEnd();
+        gl_draw("0.75",(float)(0.8+(9./4.)*3),(float)0.3);
+        
+        glBegin(GL_LINES);
+        glVertex3d(1+(9./4.)*4,1.,0.6f);
+        glVertex3d(1+(9./4.)*4,0.6,0.6f);
+        glEnd();
+        gl_draw("1",(float)(0.8+(9./4.)*4),(float)0.3);
+        
+        
+        
+        
+        //Y AXIS
+        glBegin(GL_LINES);
+        glVertex3d(1,1.,0.7f);
+        glVertex3d(1,10.,0.7f);
+        glEnd();
+        
+        
+        
+        glPopMatrix();
+        
+        
+        
+        
+        
+    }
+    
+    else {
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        
+        
+        
+        glClearColor(0., 0., 0., 1);
+        
+    }
+    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

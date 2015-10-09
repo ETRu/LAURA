@@ -57,7 +57,9 @@ extern double hism, hisv;
  extern Fl_Value_Input *invarerstop;
 
 extern igraph_vector_t tactvect;
- 
+extern igraph_vector_t fluctvect;
+extern LAURA_Histogram_1D histtact;
+extern LAURA_Histogram_1D histfluct;
  
 //------------------------------------------------------------------------------
 void InitialStateTAS(int beginner, int useran, int maxrun){
@@ -477,13 +479,19 @@ void Evolution(double dt){
             igraph_vector_scale(&avgnormstate,1./totrun);
             
             
-            
+            // GENERATE HISTOGRAM FOR DENSITY DISTRIBUTION
             histdist.CreateFromArrayMinMax(anothertemp, 40,0.,4., 1);
             
            
         }
    
+        //GENERATE HISTOGRAM FOR activation
+        histtact.CreateFromArrayMinMax(tactvect, 40,0.,1, 1);
         
+        
+        
+       // igraph_vector_scale(&fluctvect,10);
+        histfluct.CreateFromArrayMinMax(fluctvect,40,0.,1,1);
         
         
         

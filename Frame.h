@@ -31,8 +31,26 @@ public:
 };
 
 
-class FluctFrame : public Fl_Gl_Window {
+class TactFrame : public Fl_Gl_Window {
     void draw();
 public:
-    FluctFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
+    TactFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
 };
+
+
+class HTactFrame : public Fl_Gl_Window {
+    void draw();
+public:
+    HTactFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
+};
+
+
+class HFluctFrame : public Fl_Gl_Window {
+    void draw();
+public:
+    HFluctFrame(int x,int y,int w,int h,const char *l=0) : Fl_Gl_Window(x,y,w,h,l) {}
+};
+
+
+
+

@@ -6,6 +6,8 @@
 #include "igraph.h"
 #endif
 
+#include "draw.h"
+
 #include <string>
 #include <iostream>
 

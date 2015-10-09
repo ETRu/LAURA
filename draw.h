@@ -29,5 +29,14 @@ void draw_init(void);
 void draw_datascene(void);
 void draw_datainit(void);
 
-void draw_fluctscene(void);
-void draw_fluctinit(void);
+void draw_tactscene(void);
+void draw_tactinit(void);
+
+void draw_htactscene(void);
+void draw_htactinit(void);
+
+void draw_hfluctscene(void);
+void draw_hfluctinit(void);
+
+#define MAXTACTREG 10000
+

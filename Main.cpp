@@ -59,7 +59,9 @@
 // FLTK FRAMES / WINDOWS / other
 extern Frame   *scene;
 extern DataFrame   *datascene;
-extern FluctFrame   *fluctscene;
+extern TactFrame   *tactscene;
+extern HTactFrame *htactscene;
+extern HFluctFrame *hfluctscene;
 extern int framexmin, framexmax, frameymin, frameymax;
 extern Fl_Light_Button *runbutton;
 
@@ -176,11 +178,13 @@ double  totactivity;
 double  meanactivity;
 
 int     windowrm;       //dimension of the running mean window
+int     tactdisp;       //number of ticks displayed in the drawing window
 
 igraph_vector_t tactvect;   //vector containing the history of the mean activities registered
-float tactcoord[1000*2];
-
-
+igraph_vector_t fluctvect;  //vector containing the history of the fluctations of mean activities registered
+extern float tactcoord[MAXTACTREG*3];
+LAURA_Histogram_1D histtact;
+LAURA_Histogram_1D histfluct;
 
     /*
     /*  BUFFERS AND OTHER, extern from form.h
@@ -405,6 +409,18 @@ void mainidle_cb(void*){    //this routine updates the program.
             
             igraph_vector_push_back(&tactvect, totactivity);
             
+            meanactivity=0;
+            for (int i=0; i<igraph_vector_size(&tactvect); ++i) {
+                meanactivity=meanactivity+VECTOR(tactvect)[i];
+            }
+            meanactivity=meanactivity/igraph_vector_size(&tactvect);
+            
+            igraph_vector_update(&fluctvect,&tactvect);
+            
+            for (int i=0; i<igraph_vector_size(&fluctvect); ++i) {
+                VECTOR(fluctvect)[i]=fabs(VECTOR(fluctvect)[i]-meanactivity);
+            }
+            
             // ---------------------------------- CORRELATION       ------------
             
   
@@ -527,8 +543,14 @@ void mainidle_cb(void*){    //this routine updates the program.
     
     if (ticks<=maxtime){
     scene->redraw();
-    datascene->redraw();
-    if(viewingdata==1){fluctscene->redraw();}
+            tactscene->redraw();
+        
+    if(viewingdata==1){
+    
+        datascene->redraw();
+        htactscene->redraw();
+        hfluctscene->redraw();
+    }
     }
     
  
@@ -560,6 +582,7 @@ int main(int argc, char **argv) {
     viewingdata=0;
     
     igraph_vector_init(&tactvect,0);
+    igraph_vector_init(&fluctvect,0);
     
     //RANDOM NUMBER GENERATOR INITIALISE
     init_genrand(0); //srand(3);
@@ -576,6 +599,8 @@ int main(int argc, char **argv) {
         generatelattice(2,5,1,0,0,0,0);
         
         windowrm=10;
+        tactdisp=100;
+        for(int i=0;i<MAXTACTREG*3;++i){tactcoord[i]=0;}
         
         //inizializations
         igraph_matrix_init(&state, 0, 0);
@@ -586,6 +611,7 @@ int main(int argc, char **argv) {
         igraph_matrix_init(&loss, 0, 0);
         
         igraph_matrix_init(&dissipation,0,0);
+        
         
         beginner=(nodesnumber/2);
         InitialStateTAS(beginner,0,totrun);
@@ -622,6 +648,8 @@ int main(int argc, char **argv) {
     
     
     histdist.Clear();
+    histtact.Clear();
+    histfluct.Clear();
     
     igraph_destroy(&graph);
     igraph_destroy(&sgraph);
@@ -639,6 +667,7 @@ int main(int argc, char **argv) {
     igraph_vector_destroy(&statstate);
     igraph_matrix_destroy(&estates);
     igraph_vector_destroy(&tactvect);
+    igraph_vector_destroy(&fluctvect);
     
     closeout();
     
