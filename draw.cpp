@@ -1065,7 +1065,7 @@ void draw_hfluctscene(void){
         
         for(int i=0;i<nbins;++i){
             
-            xtl=1+i*binwidth; ytl=(VECTOR((histfluct.bins))[i])*8+1;
+            xtl=1+(i*binwidth); ytl=(VECTOR((histfluct.bins))[i])*8+1;
             xtr=1+(1+i)*binwidth; ytr=ytl;
             xbl=xtl; ybl=1;
             xbr=xtr; ybr=ybl;
@@ -1093,6 +1093,7 @@ void draw_hfluctscene(void){
         
         
         //draw mean
+        
         
         glColor3f(0,1,0);
         glBegin(GL_LINES);
@@ -1124,25 +1125,29 @@ void draw_hfluctscene(void){
         glVertex3d(1+(9./4.),1.,0.6f);
         glVertex3d(1+(9./4.),0.8,0.6f);
         glEnd();
-        gl_draw("0.25",(float)(0.8+(9./4.)),(float)0.3);
+        sprintf(textstring,"%.3f",histfluct.max / 4.);
+        gl_draw(textstring,(float)(0.4+(9./4.)),(float)0.3);
         
         glBegin(GL_LINES);
         glVertex3d(1+(9./4.)*2,1.,0.6f);
         glVertex3d(1+(9./4.)*2,0.8,0.6f);
         glEnd();
-        gl_draw("0.5",(float)(0.8+(9./4.)*2),(float)0.3);
+        sprintf(textstring,"%.3f",histfluct.max /2.);
+        gl_draw(textstring,(float)(0.4+(9./4.)*2),(float)0.3);
         
         glBegin(GL_LINES);
         glVertex3d(1+(9./4.)*3,1.,0.6f);
         glVertex3d(1+(9./4.)*3,0.8,0.6f);
         glEnd();
-        gl_draw("0.75",(float)(0.8+(9./4.)*3),(float)0.3);
+        sprintf(textstring,"%.3f",histfluct.max*(3./4.));
+        gl_draw(textstring,(float)(0.4+(9./4.)*3),(float)0.3);
         
         glBegin(GL_LINES);
         glVertex3d(1+(9./4.)*4,1.,0.6f);
         glVertex3d(1+(9./4.)*4,0.6,0.6f);
         glEnd();
-        gl_draw("1",(float)(0.8+(9./4.)*4),(float)0.3);
+        sprintf(textstring,"%.3f",histfluct.max);
+        gl_draw(textstring,(float)(0.4+(9./4.)*4),(float)0.3);
         
         
         

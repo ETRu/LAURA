@@ -491,8 +491,8 @@ void Evolution(double dt){
         
         
        // igraph_vector_scale(&fluctvect,10);
-        histfluct.CreateFromArrayMinMax(fluctvect,40,0.,1,1);
-        
+        //histfluct.CreateFromArrayMinMaxLog(fluctvect,40,0, 10, 1);
+        histfluct.CreateFromArrayLog(fluctvect, 40, 1);
         
         
         

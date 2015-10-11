@@ -18,6 +18,8 @@ public:
     double max;
     //number of bins
     int nbins;
+    //logarithmic or not
+    int islog;
     //vector storing the histogram bins value:
     igraph_vector_t bins;
     
@@ -27,7 +29,9 @@ public:
     
     void Clear();
     void CreateFromArray(igraph_vector_t inarray, int innbins, int normalize);
+    void CreateFromArrayLog(igraph_vector_t inarray, int innbins, int normalize);
     void CreateFromArrayMinMax(igraph_vector_t inarray, int innbins, float min, float max, int normalize);
+    void CreateFromArrayMinMaxLog(igraph_vector_t inarray, int innbins, float min, float max, int normalize);
     
 };
 
