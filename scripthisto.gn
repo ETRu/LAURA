@@ -1,0 +1,118 @@
+
+
+f1(x) = a1*exp(x*b1)            # define the function to be fit
+f2(x) = a2*exp(x*b2)
+f3(x) = a3*exp(x*b3)
+f4(x) = a4*exp(x*b4)
+f5(x) = a5*exp(x*b5)
+f6(x) = a6*exp(x*b6)
+f7(x) = a7*exp(x*b7)
+f8(x) = a8*exp(x*b8)
+f9(x) = a9*exp(x*b9)
+f10(x) = a10*exp(x*b10)
+
+
+
+# initial guess for a1 and b1
+a1=1;
+b1=-1;
+
+a2=1;
+b2=-1;
+
+a3=1;
+b3=-1;
+
+a4=1;
+b4=-1;
+
+a5=1;
+b5=-1;
+
+a6=1;
+b6=-1;
+
+a7=1;
+b7=-1;
+
+a8=1;
+b8=-1;
+
+a9=1;
+b9=-1;
+
+a10=1;
+b10=-1;
+
+
+
+fit f1(x) "hfluct.txt" u 1:2 via a1, b1
+fit f2(x) "hrmfluct5.txt" u 1:2 via a2, b2
+fit f3(x) "hrmfluct10.txt" u 1:2 via a3, b3
+fit f4(x) "hrmfluct20.txt" u 1:2 via a4, b4
+fit f5(x) "hrmfluct30.txt" u 1:2 via a5, b5
+fit f6(x) "hrmfluct40.txt" u 1:2 via a6, b6
+fit f7(x) "hrmfluct50.txt" u 1:2 via a7, b7
+fit f8(x) "hrmfluct75.txt" u 1:2 via a8, b8
+fit f9(x) "hrmfluct100.txt" u 1:2 via a9, b9
+fit f10(x) "hrmfluct125.txt" u 1:2 via a10, b10
+
+print a1, a2, a3, a4, a5, a6, a7, a8, a9, a10
+print b1, b2, b3, b4, b5, b6, b7, b8, b9, b10
+
+
+set term png #output terminal and file
+set xlabel "Fluctuations"
+set ylabel "Frequency"
+
+set output "flucthist.png"
+
+
+plot \
+f1(x), "hfluct.txt" u 1:2 w l,\
+f2(x), "hrmfluct5.txt" u 1:2 w l,\
+f3(x), "hrmfluct10.txt" u 1:2 w l,\
+f4(x), "hrmfluct20.txt" u 1:2 w l,\
+f5(x), "hrmfluct30.txt" u 1:2 w l,\
+f6(x), "hrmfluct40.txt" u 1:2 w l,\
+f7(x), "hrmfluct50.txt" u 1:2 w l,\
+f8(x), "hrmfluct75.txt" u 1:2 w l,\
+f9(x), "hrmfluct100.txt" u 1:2 w l,\
+f10(x), "hrmfluct125.txt" u 1:2 w l
+
+set term png #output terminal and file
+set xlabel "RM Window size"
+set ylabel "Fitted Exponential slope"
+
+set output "fitexp.png"
+
+plot '+' u (1):(b1),\
+'' u (5):(b2),\
+'' u (10):(b3),\
+'' u (20):(b4),\
+'' u (30):(b5),\
+'' u (40):(b6),\
+'' u (40):(b7),\
+'' u (75):(b8),\
+'' u (100):(b9),\
+'' u (125):(b10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
