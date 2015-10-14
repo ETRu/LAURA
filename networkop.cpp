@@ -135,7 +135,7 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
         print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
-        for(int i=0;i<nodesnumber-1; ++i){
+        for(int i=0;i<nodesnumber; ++i){
             
            /* double totsum=0;
             for(int j=0;j<igraph_matrix_ncol(&admatrix);++j){
