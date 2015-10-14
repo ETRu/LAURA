@@ -34,7 +34,7 @@ void analysys(int window){
     sprintf(oshflm, "hrmfluct%i.txt",window);
     
     ifstream indata;
-                                                /* INPUT FILE  */ indata.open("myout7.txt");
+                                                /* INPUT FILE  */ indata.open("test/N10000eps01th5007.txt");
     
     
     FILE *outactimean;
