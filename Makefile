@@ -1,6 +1,7 @@
 
 ################ template makefile ##############
 
+
 BIN	= Project
 OBJ	= draw.o form.o Frame.o Main.o igraphutil.o logdebug.o randomgen.o dinamica.o networkop.o dataanalysis.o
 

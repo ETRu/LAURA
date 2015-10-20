@@ -692,7 +692,7 @@ void DialogueNewNet(void) {
     
     ypos=ypos+10;
     widgh=BUTTON_H1;
-    bnewclusger2 = new Fl_Button(xpos, ypos, widgw, widgh, "Clust - Gerar (2L)");
+    bnewclusger2 = new Fl_Button(xpos, ypos, widgw, widgh, "2L Clustered");
     ypos=ypos+widgh;
     
     bnewlattice->callback(newlatcb,0);
@@ -1389,7 +1389,7 @@ void DialogueNewClusGer2(void) {
     
     w_est= DIAL_W;
     
-    dial4 =  new Fl_Window(w_est,h_est,"New Clus-GERARCHIC - 2 Layers");
+    dial4 =  new Fl_Window(w_est,h_est,"New 2 Layers Clustered Net");
     dial4->set_modal();
     
     ypos=BORDER1/2;
@@ -2225,11 +2225,19 @@ void turbocb(Fl_Widget *, void *){
 
 
 void drawhistocb(Fl_Widget *, void *) {
-    if (drawhisto==0) {drawhisto=1;
+    if (drawhisto==0) {
+        drawhisto=1;
         datascene->activate();
+        tactscene->activate();
+        hfluctscene->activate();
+        htactscene->activate();
     }
-    else {drawhisto=0;
+    else {
+        drawhisto=0;
         datascene->deactivate();
+        tactscene->deactivate();
+        hfluctscene->deactivate();
+        htactscene->deactivate();
     }
     
 }
@@ -2406,7 +2414,7 @@ void DataWindow(void) {
     ypos=ypos+10;
     
     
-    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,540, "");
+    histogroup = new Fl_Group(xpos-5,ypos-5,BUTTON_L+10,510, "");
     histogroup->align(FL_ALIGN_TOP_LEFT);
     histogroup->labelfont(FL_BOLD);
     histogroup->box(FL_BORDER_BOX);
@@ -2418,13 +2426,10 @@ void DataWindow(void) {
     datascene =  new DataFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
-    ypos=ypos+5;
-    widgh=BUTTON_H1;  widgw=BUTTON_L;
-    drawhistobutton = new Fl_Check_Button(xpos,ypos,BUTTON_L,widgh,"Draw Histo");
-    drawhistobutton->value(1);    drawhisto=1;
-    ypos=ypos+widgh;
     
-    ypos=ypos+10;
+    widgh=BUTTON_H1;
+
+    ypos=ypos+15;
     widgw=BUTTON_L-10;
     meanbuff = new Fl_Text_Buffer();
     meandisp = new Fl_Text_Display(xpos, ypos, widgw, 25, "Mean");
@@ -2516,12 +2521,7 @@ void DataWindow(void) {
         histogroup->deactivate();
     }
     
-    
-    
-    //  MEAN VALUE HISTOGRAM CALLBACKS
-    drawhistobutton->callback(drawhistocb,0);
-    printbutton1->callback(printhistodatacb,0);
-    cstopbutton->callback(cstopcb,0);
+
     
     ypos=ypos+20;
     
@@ -2562,6 +2562,15 @@ void DataWindow(void) {
     intactdisplay->minimum(10);
     intactdisplay->maximum(10000);
     intactdisplay->value(tactdisp);
+    
+    
+    xpos=xpos+60;
+    ypos=ypos-25;
+    drawhistobutton = new Fl_Check_Button(xpos,ypos,widgh,widgh,"Draw");
+    drawhistobutton->value(0);
+    drawhistobutton->activate();
+    drawhisto=0;
+    ypos=ypos+25;
     
     xpos=BUTTON_L+20+2*BORDER1;
     ypos=ypos+widgh;
@@ -2619,8 +2628,17 @@ void DataWindow(void) {
     hfluctscene =  new HFluctFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
-    xpos=xpos-BUTTON_L-10;
     
+    /*xpos=xpos-BUTTON_L-10;
+    xpos=xpos+10;
+    ypos=ypos+10; xpos=xpos+BUTTON_L/2;
+    widgh=BUTTON_H1;  widgw=BUTTON_L;
+    drawhistobutton = new Fl_Check_Button(xpos,ypos,widgh,widgh," --------- Draw --------- ");
+    drawhistobutton->value(0);
+    drawhistobutton->activate();
+    drawhisto=0;
+    ypos=ypos+widgh;
+   */
     
     /*
      widgh=BUTTON_H1;
@@ -2631,6 +2649,14 @@ void DataWindow(void) {
     
     
     //closeit->callback(exitdatacb,0);
+    
+    
+    //CALLBACKS
+    drawhistobutton->callback(drawhistocb,0);
+    printbutton1->callback(printhistodatacb,0);
+    cstopbutton->callback(cstopcb,0);
+    
+    
     
     
     // RESIZE WINDOW

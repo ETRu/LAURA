@@ -650,7 +650,9 @@ void draw_tactscene(void){
     tickstodraw=ticks;
     if(ticks > tactdisp){tickstodraw=tactdisp;}
     
-    
+    if(drawhisto==1)
+        
+    {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(1., 1., 1., 1);
     
@@ -794,9 +796,18 @@ void draw_tactscene(void){
     
     glPopMatrix();
     
+    }
     
-    
-    
+    else {
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        
+        
+        
+        glClearColor(0., 0., 0., 1);
+        
+    }
 }
 
 
