@@ -98,12 +98,14 @@ igraph_matrix_t admatrix;   //ADJACENCE MATRIX
 igraph_matrix_t estates;    //EIGENSTATES OF ADMATRIX
 
 int nodesnumber;
+int sourcenode;
 
 int ticks;      //time elapsed
 int tickstep;   //time espales in a single "step" a steprun
 double deltat;  //delta t (makes it faster or slower if "ispii" (i.e. loops) is activated
 
 //OUTPUTS
+FILE * output0;
 FILE * output1;
 FILE * output2;
 FILE * output3;
@@ -260,7 +262,8 @@ void mainidle_cb(void*){    //this routine updates the program.
           
             //---------------------------------------------------------------------- if have steady state
             if(usesteady==1){
-                
+               
+                //fprintf(output0,"%i ", ticks);
                 fprintf(output1,"%i ", ticks);
                 fprintf(output2,"%i ", ticks);
                 fprintf(output5,"%i ", ticks);
@@ -285,6 +288,7 @@ void mainidle_cb(void*){    //this routine updates the program.
                     totdens=totdens+dens;
                     toterr=toterr+err;
                     
+                    //fprintf(output0,"%f ",dens*particles);
                     fprintf(output1,"%f ",dens);
                     fprintf(output2,"%f ",err);
                     fprintf(output5,"%f ",shooted);
@@ -338,6 +342,47 @@ void mainidle_cb(void*){    //this routine updates the program.
                 
                 fprintf(output2,"%f %f",toterr, totimerr);
                 
+                
+                // --------- bin histogram vector using the state vector
+                
+                igraph_vector_t hst;
+                int bsize=threshold/3;
+                if(bsize<1) bsize=1;
+                int bins=particles/bsize;
+                igraph_vector_init(&hst,bins);
+                igraph_vector_null(&hst);
+                
+                
+                igraph_vector_t totstate;
+                igraph_vector_init(&totstate,0);
+                igraph_matrix_rowsum(&state, &totstate);
+                igraph_vector_scale(&totstate,1./totrun);
+                
+                
+                for (int i=1; i<bins+1; ++i) {
+                    int nn;
+                    nn=nodesnumber;
+                    if(isdissipating==1) nn=nn-1;
+                    for (int j=0; j<nn; ++j) {
+                        if ( (i-1)*bsize <= VECTOR(totstate)[j] && VECTOR(totstate)[j] < i*bsize) {
+                            VECTOR(hst)[i-1]=VECTOR(hst)[i-1]+1;
+                        }
+                    }
+                }
+                
+                 //printf("\n TH= %i   bsize= %i     ", threshold, bsize);
+                
+                //print_vector_line(&hst, output0);
+                print_vector_indexed(&hst, output0);
+                
+                igraph_vector_destroy(&totstate);
+                igraph_vector_destroy(&hst);
+
+                
+                
+                
+                
+                //fprintf(output0,"\n");
                 fprintf(output1,"\n");
                 fprintf(output2,"\n");
                 fprintf(output5,"\n");
@@ -375,6 +420,7 @@ void mainidle_cb(void*){    //this routine updates the program.
             //if i HAVENT STEADY STATE
             else {
                 
+                //fprintf(output0,"%i ", ticks);
                 fprintf(output1,"%i ", ticks);
                 fprintf(output5,"%i ", ticks);
                 
@@ -390,10 +436,50 @@ void mainidle_cb(void*){    //this routine updates the program.
                     dens=dens/totrun;
                     shooted=shooted/totrun;
                     
+                    //fprintf(output0,"%f " ,dens*particles);
                     fprintf(output1,"%f " ,dens);
                     fprintf(output5,"%f " ,shooted);
                 }
                 
+                
+                // --------- bin histogram vector using the state vector
+                
+                igraph_vector_t hst;
+                int bsize=threshold/3;
+                if(bsize<1) bsize=1;
+                int bins=particles/bsize;
+                igraph_vector_init(&hst,bins);
+                igraph_vector_null(&hst);
+                
+                
+                igraph_vector_t totstate;
+                igraph_vector_init(&totstate,0);
+                igraph_matrix_rowsum(&state, &totstate);
+                igraph_vector_scale(&totstate,1./totrun);
+                
+                
+                for (int i=1; i<bins+1; ++i) {
+                    int nn;
+                    nn=nodesnumber;
+                    if(isdissipating==1) nn=nn-1;
+                    for (int j=0; j<nn; ++j) {
+                        if ( (i-1)*bsize <= VECTOR(totstate)[j] && VECTOR(totstate)[j] < i*bsize) {
+                            VECTOR(hst)[i-1]=VECTOR(hst)[i-1]+1;
+                        }
+                    }
+                }
+                
+                //printf("\n TH= %i   bsize= %i     ", threshold, bsize);
+                
+                //print_vector_line(&hst, output0);
+                print_vector_indexed(&hst, output0);
+                
+                igraph_vector_destroy(&totstate);
+                igraph_vector_destroy(&hst);
+                
+                
+                
+                //fprintf(output0,"\n");
                 fprintf(output1,"\n");
                 fprintf(output5,"\n");
                 
@@ -434,7 +520,7 @@ void mainidle_cb(void*){    //this routine updates the program.
             
                 
             igraph_vector_t correlation;
-            igraph_vector_init(&correlation,(nodesnumber*nodesnumber));
+            igraph_vector_init(&correlation,nodesnumber);
             igraph_vector_null(&correlation);
             
             igraph_vector_t meanactivation;
@@ -451,7 +537,9 @@ void mainidle_cb(void*){    //this routine updates the program.
             igraph_vector_scale(&meanactivation,1./totrun);
             
             //calculate actual correlation
-            for (int x=0; x<nodesnumber ; ++x) {
+           // for (int x=0; x<nodesnumber ; ++x)
+                int x=sourcenode;
+            {
                 for(int y=0; y<nodesnumber; ++y){
                     
                     double prod=0;
@@ -460,14 +548,14 @@ void mainidle_cb(void*){    //this routine updates the program.
                     }
                     prod=prod/totrun;
                     
-                    VECTOR(correlation)[(x*nodesnumber+y)] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
+                    VECTOR(correlation)[y] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
                     
                 }
             }
             
             igraph_vector_destroy(&meanactivation);
             
-            for (int i=0; i<(nodesnumber*nodesnumber); ++i) {
+            for (int i=0; i<nodesnumber; ++i) {
                 fprintf(output6,"%f ",VECTOR(correlation)[i]);
             }
             

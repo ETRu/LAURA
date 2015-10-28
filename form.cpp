@@ -2,6 +2,8 @@
 
 
 extern int nodesnumber;
+extern int sourcenode;
+
 extern igraph_matrix_t admatrix;
 extern igraph_t graph;
 extern igraph_matrix_t layout;
@@ -24,6 +26,7 @@ extern double deltat;
 extern int ticks;
 extern int tickstep;
 
+extern FILE * output0;
 extern FILE * output1;
 extern FILE * output2;
 extern FILE * output3;
@@ -1358,7 +1361,7 @@ void generateclustsymcb(Fl_Widget *, void *) {
     isclustered=1;
     
     
-    print_matrix_ur(&admatrix,stdout);
+    //print_matrix_ur(&admatrix,stdout);
     
     
     
@@ -1659,7 +1662,7 @@ void generateclusger2cb(Fl_Widget *, void *) {
     
     
     printf("\n\n\n\n");
-    print_matrix_ur(&admatrix,stdout);
+    //print_matrix_ur(&admatrix,stdout);
     
     printf("\n\n\n\n");
     
@@ -1752,6 +1755,17 @@ void openout(){
     
     if(haveout==0) {
         
+        sprintf(filename,"%s%i.txt",setoutname->value(),0);
+        
+        if( (output0=fopen(filename,"w")) ==NULL) {
+            logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
+            sprintf(errorstring,"ERROR\nOPENING\nOUTPUT\nFILE");
+            error=1;
+            rewrite=1;
+            runbutton->value(0);
+            return;
+        }
+        
         sprintf(filename,"%s%i.txt",setoutname->value(),1);
         
         if( (output1=fopen(filename,"w")) ==NULL) {
@@ -1828,6 +1842,7 @@ void openout(){
 void closeout(){
     
     if (haveout==1) {
+        fclose(output0);
         fclose(output1);
         fclose(output2);
         fclose(output3);

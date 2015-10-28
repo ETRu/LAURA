@@ -20,6 +20,7 @@ extern int tickstep;
 
 
 extern int nodesnumber;
+extern int sourcenode;
 
 extern int vincolo;
 extern int threshold;
@@ -39,6 +40,8 @@ extern int totrun;
 
 extern Fl_Check_Button *printcorrbutton;
 
+
+extern FILE * output0;
 extern FILE * output1;
 extern FILE * output2;
 extern FILE * output3;
@@ -341,9 +344,24 @@ void Evolution(double dt){
                         if(dontmove<1-(0.5*dt)){
                             
                             
+                            if(j==(nodesnumber-1))
+                                
+                            {
+                                //add to state vector
+                                ++MATRIX(loss,j,run); ++MATRIX(dissipation,j,run);
+                                ++VECTOR(gain)[sourcenode];
+                                //get eids for flux
+                                igraph_get_eid(&sgraph, &eid,j,sourcenode,IGRAPH_UNDIRECTED,1);
+                                //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
+                                //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
+                                MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-sourcenode) / abs(j-sourcenode) );
+                                //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
+                                
+                            }
+                            
                             
                             //°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°   WHEEEEEEEEEEEEL °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-                            
+                            else {
                             for(repete=0;repete<maxwheel;++repete)
                                 
                             {
@@ -417,7 +435,7 @@ void Evolution(double dt){
                                 
                             }
                             
-                            
+                            }
                             
                             //°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
                         }
@@ -720,7 +738,7 @@ void TurboRun(double dt){
         //if have steady state
         if(usesteady==1){
            
-            
+            //fprintf(output0,"%i ", time);
             fprintf(output1,"%i ", time);
             fprintf(output2,"%i ", time);
             fprintf(output5,"%i ", time);
@@ -752,7 +770,6 @@ void TurboRun(double dt){
                 toterr=toterr+err; totrelerr=totrelerr+errrel;
                 
                 shooted=shooted/totrun;
-                
                 
                 fprintf(output1,"%f ",dens);
                 fprintf(output2,"%f ",err);
@@ -815,6 +832,44 @@ void TurboRun(double dt){
             
             fprintf(output2,"%f %f",toterr, totimerr);
             
+            // --------- bin histogram vector using the state vector
+            
+            igraph_vector_t hst;
+            int bsize=threshold/3;
+            if(bsize<1) bsize=1;
+            int bins=particles/bsize;
+            igraph_vector_init(&hst,bins);
+            igraph_vector_null(&hst);
+            
+            
+            igraph_vector_t totstate;
+            igraph_vector_init(&totstate,0);
+            igraph_matrix_rowsum(&state, &totstate);
+            igraph_vector_scale(&totstate,1./totrun);
+            
+            
+            for (int i=1; i<bins+1; ++i) {
+                int nn;
+                nn=nodesnumber;
+                if(isdissipating==1) nn=nn-1;
+                for (int j=0; j<nn; ++j) {
+                    if ( (i-1)*bsize <= VECTOR(totstate)[j] && VECTOR(totstate)[j] < i*bsize) {
+                        VECTOR(hst)[i-1]=VECTOR(hst)[i-1]+1;
+                    }
+                }
+            }
+            
+            //print_vector_line(&hst, output0);
+            print_vector_indexed(&hst, output0);
+            
+            igraph_vector_destroy(&totstate);
+            igraph_vector_destroy(&hst);
+
+            
+            
+            
+            
+            //fprintf(output0,"\n");
             fprintf(output1,"\n");
             fprintf(output2,"\n");
             fprintf(output5,"\n");
@@ -872,6 +927,7 @@ void TurboRun(double dt){
         //if i HAVENT STEADY STATE
         else {
             
+            //fprintf(output0,"%i ", time);
             fprintf(output1,"%i ", time);
             fprintf(output5,"%i ", time);
             
@@ -887,10 +943,12 @@ void TurboRun(double dt){
                 dens=dens/totrun;
                 shooted=shooted/totrun;
                 
+                //fprintf(output0,"%f " ,dens*particles);
                 fprintf(output1,"%f " ,dens);
                 fprintf(output5,"%i ", shooted);
             }
             
+            //fprintf(output0,"\n");
             fprintf(output1,"\n");
             fprintf(output5,"\n");
             
@@ -914,7 +972,7 @@ void TurboRun(double dt){
             
             
             igraph_vector_t correlation;
-            igraph_vector_init(&correlation,(nodesnumber*nodesnumber));
+            igraph_vector_init(&correlation,(nodesnumber));
             igraph_vector_null(&correlation);
             
             igraph_vector_t meanactivation;
@@ -931,7 +989,15 @@ void TurboRun(double dt){
             igraph_vector_scale(&meanactivation,1./totrun);
             
             //calculate actual correlation
-            for (int x=0; x<nodesnumber ; ++x) {
+            //for (int x=0; x<nodesnumber ; ++x)
+            int x=sourcenode;
+            {
+                double sx=0;
+                double sy=0;
+              
+                // TODO
+                
+                
                 for(int y=0; y<nodesnumber; ++y){
                     
                     double prod=0;
@@ -940,14 +1006,14 @@ void TurboRun(double dt){
                     }
                     prod=prod/totrun;
                     
-                    VECTOR(correlation)[(x*nodesnumber+y)] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
+                    VECTOR(correlation)[y] = prod - (VECTOR(meanactivation)[x]*VECTOR(meanactivation)[y]);
                     
                 }
             }
             
             igraph_vector_destroy(&meanactivation);
             
-            for (int i=0; i<(nodesnumber*nodesnumber); ++i) {
+            for (int i=0; i<(nodesnumber); ++i) {
                 fprintf(output6,"%f ",VECTOR(correlation)[i]);
             }
             

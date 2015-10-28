@@ -7,6 +7,7 @@
 #endif
 
 extern int nodesnumber;
+extern int sourcenode;
 extern igraph_matrix_t admatrix;
 extern igraph_t graph;
 extern igraph_t sgraph;
@@ -121,10 +122,13 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
     
     
     isdissipating=0;
+    sourcenode=0;
     
     if(diss==1 && drate>0){
         
         isdissipating=1;
+        sourcenode=dnode;
+        
         //add the dissipation node to admatrix:
         igraph_matrix_add_rows(&admatrix, 1);
         for(int i=0; i<igraph_matrix_ncol(&admatrix);++i){MATRIX(admatrix,igraph_matrix_nrow(&admatrix)-1,i)=0;}
@@ -132,7 +136,7 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
         for(int i=0; i<igraph_matrix_nrow(&admatrix);++i){MATRIX(admatrix,i,igraph_matrix_ncol(&admatrix)-1)=0;}
         
         printf("\n clean version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
         for(int i=0;i<nodesnumber; ++i){
@@ -164,7 +168,7 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
         
         
         printf("\n connected version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+       // print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         
         //generate graph from admatrix
@@ -198,7 +202,7 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
         igraph_vector_destroy(&row);
         
         
-        print_matrix_ur(&admatrix,stdout);
+        //print_matrix_ur(&admatrix,stdout);
 
         
         
@@ -397,9 +401,13 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
     
     
     isdissipating=0;
+    sourcenode=0;
+    
     
     if(diss==1 && drate>0){
         isdissipating=1;
+        sourcenode=dnode;
+        
         //add the dissipation node to admatrix:
         igraph_matrix_add_rows(&admatrix, 1);
         for(int i=0; i<igraph_matrix_ncol(&admatrix);++i){MATRIX(admatrix,igraph_matrix_nrow(&admatrix)-1,i)=0;}
@@ -407,7 +415,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
         for(int i=0; i<igraph_matrix_nrow(&admatrix);++i){MATRIX(admatrix,i,igraph_matrix_ncol(&admatrix)-1)=0;}
         
         printf("\n clean version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
         for(int i=0;i<nodesnumber-1; ++i){
@@ -438,7 +446,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
         
         
         printf("\n connected version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         
         //generate graph from admatrix
@@ -471,7 +479,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
         igraph_vector_destroy(&row);
         
         
-        print_matrix_ur(&admatrix,stdout);
+        //print_matrix_ur(&admatrix,stdout);
         
         
         
@@ -568,10 +576,14 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
     
     
     isdissipating=0;
+    sourcenode=0;
+    
     
     if(diss==1 && drate>0){
         
         isdissipating=1;
+        sourcenode=dnode;
+        
         //add the dissipation node to admatrix:
         igraph_matrix_add_rows(&admatrix, 1);
         for(int i=0; i<igraph_matrix_ncol(&admatrix);++i){MATRIX(admatrix,igraph_matrix_nrow(&admatrix)-1,i)=0;}
@@ -579,7 +591,7 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
         for(int i=0; i<igraph_matrix_nrow(&admatrix);++i){MATRIX(admatrix,i,igraph_matrix_ncol(&admatrix)-1)=0;}
         
         printf("\n clean version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
         for(int i=0;i<nodesnumber-1; ++i){
@@ -610,7 +622,7 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
         
         
         printf("\n connected version \n");
-        print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         
         //generate graph from admatrix
@@ -644,7 +656,7 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
         igraph_vector_destroy(&row);
         
         
-        print_matrix_ur(&admatrix,stdout);
+        //print_matrix_ur(&admatrix,stdout);
         
         
         
@@ -713,7 +725,7 @@ void generateclustsym(int clusnumber, int clusdim, double interconn, double intr
         igraph_matrix_init(&adclus,0,0);
         igraph_get_adjacency(&gtemp, &adclus, IGRAPH_GET_ADJACENCY_UPPER, 0);
         
-        printf("\n cluster %i \n", cluster); print_matrix_ur(&adclus,stdout); printf("\n\n");
+        printf("\n cluster %i \n", cluster); //print_matrix_ur(&adclus,stdout); printf("\n\n");
         
         for (int j=0; j<clusdim; ++j) {
             for(int k=0; k<clusdim; ++k) {
@@ -751,7 +763,7 @@ void generateclustsym(int clusnumber, int clusdim, double interconn, double intr
         }
     }
     
-    print_matrix_ur(&adtemp,stdout);
+    //print_matrix_ur(&adtemp,stdout);
     
     fflush(stdout);
     
@@ -827,7 +839,7 @@ void generateclustsym(int clusnumber, int clusdim, double interconn, double intr
     igraph_vector_destroy(&row);
     
     
-    print_matrix_ur(&admatrix,stdout);
+    //print_matrix_ur(&admatrix,stdout);
     
     //layout
     
@@ -942,7 +954,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
         igraph_matrix_init(&adclus,0,0);
         igraph_get_adjacency(&gtemp, &adclus, IGRAPH_GET_ADJACENCY_BOTH, 0);
         
-        printf("\n cluster %i \n", cluster); print_matrix_ur(&adclus,stdout); printf("\n\n");
+        printf("\n cluster %i \n", cluster); //print_matrix_ur(&adclus,stdout); printf("\n\n");
         
         for (int j=0; j<clusdim; ++j) {
             for(int k=0; k<clusdim; ++k) {
@@ -1054,7 +1066,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     igraph_matrix_destroy(&pots);
     igraph_matrix_destroy(&wpots);
     printf("\n\n\n\n");
-    print_matrix_ur(&adtemp,stdout);
+    //print_matrix_ur(&adtemp,stdout);
     printf("\n\n\n\n");
     
     
@@ -1075,11 +1087,15 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     
     //include dissipation.
     isdissipating=0;
+    sourcenode=0;
+    
     
     
     if(dissipate==1 && dissipation>0){
         
         isdissipating=1;
+        sourcenode=dnode;
+        
         
         //add the dissipation node to admatrix:
         igraph_matrix_add_rows(&adtemp, 1);
@@ -1091,7 +1107,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
         {MATRIX(adtemp,i,totnodes)=0;}
         
         printf("\n --- ADDING DISSIPATION: adtemp, clean version (added new row and new column, all 0) \n");
-        print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         //connect the sink
         for(int i=0;i<totnodes-(cnodes*nbridges); ++i){
@@ -1107,7 +1123,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
         
         
         printf("\n connected version \n");
-        print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         
     }
@@ -1199,7 +1215,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     
     
     
-    printf("\n   LINKS OF THE BRIDGES:   \n"); print_matrix_ur(&bridgeslinks,stdout); printf("\n \n");
+    printf("\n   LINKS OF THE BRIDGES:   \n"); //print_matrix_ur(&bridgeslinks,stdout); printf("\n \n");
     
     
 
@@ -1217,7 +1233,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     igraph_vector_destroy(&row);
     
     
-    print_matrix_ur(&admatrix,stdout);
+    //print_matrix_ur(&admatrix,stdout);
     
     //layout
     
@@ -1355,7 +1371,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
         igraph_matrix_init(&adclus,0,0);
         igraph_get_adjacency(&gtemp, &adclus, IGRAPH_GET_ADJACENCY_BOTH, 0);
         
-        printf("\n cluster %i \n", cluster); print_matrix_ur(&adclus,stdout); printf("\n\n");
+        printf("\n cluster %i \n", cluster); //print_matrix_ur(&adclus,stdout); printf("\n\n");
         
         for (int j=0; j<clusdim1; ++j) {
             for(int k=0; k<clusdim1; ++k) {
@@ -1485,7 +1501,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     
     
     printf("\n\n                NON CONNECTED BIG CLUSTERS              \n\n");
-    print_matrix_ur(&adtemp,stdout);
+    //print_matrix_ur(&adtemp,stdout);
     printf("\n\n\n\n");
     
     
@@ -1555,7 +1571,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
                     bnp=MATRIX(wpots,0,contator);
                     
                     printf("\n [i=%i] cnp=%f  bnp=%f   \n\n pots:\n\n",i, cnp, bnp);
-                    print_matrix_ur(&pots,stdout); printf("\n  wpots: \n"); print_matrix_ur(&wpots,stdout);
+                    //print_matrix_ur(&pots,stdout); printf("\n  wpots: \n"); print_matrix_ur(&wpots,stdout);
                     
                     //in one direction
                     MATRIX(adtemp,  cn, bn)=    exp( -(bnp-cnp)/2);
@@ -1611,7 +1627,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     
     
     printf("\n\n  THIS IS ADTEMP:   \n\n");
-    print_matrix_ur(&adtemp,stdout);
+    //print_matrix_ur(&adtemp,stdout);
     printf("\n\n\n\n");
     
     
@@ -1707,11 +1723,14 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     
     //include dissipation.
     isdissipating=0;
+    sourcenode=0;
     
     
     if(dissipate==1 && dissipation>0){
         
         isdissipating=1;
+        sourcenode=dnode;
+        
         
         //add the dissipation node to admatrix:
         igraph_matrix_add_rows(&adtemp, 1);
@@ -1723,7 +1742,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
         {MATRIX(adtemp,i,totnodes)=0;}
         
         printf("\n --- ADDING DISSIPATION: adtemp, clean version (added new row and new column, all 0) \n");
-        print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         //connect the sink
         for(int k=0;k<clusnumber2;++k){
@@ -1741,7 +1760,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
         
         
         printf("\n connected version \n");
-        print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
+        //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         
     }
@@ -1858,7 +1877,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     
     
     
-    printf("\n   LINKS OF THE BRIDGES:   \n"); print_matrix_ur(&bridgeslinks,stdout); printf("\n \n");
+    printf("\n   LINKS OF THE BRIDGES:   \n"); //print_matrix_ur(&bridgeslinks,stdout); printf("\n \n");
     
     
 
@@ -1875,7 +1894,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     igraph_vector_destroy(&row);
     
     
-    print_matrix_ur(&admatrix,stdout);
+    //print_matrix_ur(&admatrix,stdout);
     
     
     
@@ -2051,7 +2070,7 @@ void StationaryState() {
     
     
     printf("\n \n eigenvectors:");
-    print_matrix_ur(&estates,stdout);
+   // print_matrix_ur(&estates,stdout);
     printf("\n\n");
     
     
@@ -2205,7 +2224,7 @@ void loadnetwork(char *mypath) {
     //logDebug("\nADJ MATRIX: ");
     //print_matrix(&adtemp,stdout);
     logDebug("\nState:\n");
-    print_matrix_ur(&statetemp,stdout);
+    //print_matrix_ur(&statetemp,stdout);
     
     if(myusesteady==1){    logDebug("\nSteady State: ");
         print_vector_line(&steadytemp,stdout);}
