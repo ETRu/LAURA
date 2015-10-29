@@ -15,6 +15,8 @@ using namespace std;
                                                 #define N 1000000      // <<-------  MAXIMUM TREATABLE DATA
 
 
+double data[N];
+double var[N];
 
 
 
@@ -34,7 +36,7 @@ void analysys(int window){
     sprintf(oshflm, "hrmfluct%i.txt",window);
     
     ifstream indata;
-                                                /* INPUT FILE  */ indata.open("test/th9007.txt");
+                                                /* INPUT FILE  */ indata.open("db4-68007.txt");
     
     
     FILE *outactimean;
@@ -64,7 +66,6 @@ void analysys(int window){
     
     
     
-    double data[N];
     double histo[10000];
     for(int i=0;i<N;++i){data[i]=0;}
     
@@ -77,6 +78,7 @@ void analysys(int window){
     double binw;
     
     double mean;
+    double f;
     
     double tmean;
     
@@ -110,9 +112,10 @@ void analysys(int window){
     
     //EVALUATE FLUCTUATIONS --------------------------------------------------------------------------------------
     
-    printf("\n::::::: Evaluating FLUCTUATIONS");
+    printf("\n::::::: Evaluating FLUCTUATIONS ---- L2 NORM");
     for(int i=0; i<ndata; ++i){
-        fprintf(outfluct,"%f\n",fabs( tmean-data[i]));
+        var[i]=(tmean-data[i])*(tmean-data[i]);
+        fprintf(outfluct,"%f\n",var[i]);
     }
     
 
@@ -127,19 +130,26 @@ void analysys(int window){
     do{
      
         mean=0;
+        f=0;
         for(int i=0; i<window;++i){
             mean=mean+data[cont+i];
+            f=f+var[cont+i];
         }
         mean=mean/window;
+        f=f/window;
+        f=sqrt(f);
      
         fprintf(outactimean,"%i %f\n",(window/2)+cont,mean);
-        fprintf(outwfluct, "%f\n", fabs(mean-tmean));
+        //fprintf(outwfluct, "%f\n", fabs(mean-tmean));
+       
+        fprintf(outwfluct,"%f \n",f);
         
        ++cont;
     
     } while(cont<ndata-window);
     
-    
+    printf(" ---- LAST MEAN ----  LAST FLUCTUATION:   %f \n \n",mean, f);
+    printf("%i %f %f\n\n", window*2,mean,f);
     
     
     
@@ -300,18 +310,7 @@ void analysys(int window){
 
 int main(){
 
-    analysys(5);    //2
-  
-    analysys(10);   //3
-    /*
-    analysys(20);   //4
-    analysys(30);   //5
-    analysys(40);   //6
-    analysys(50);   //7
-    analysys(75);   //8
-    analysys(100);  //9
-    analysys(125);  //10
-    */
+    analysys(5000);
     
     return 0;}
 

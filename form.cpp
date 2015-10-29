@@ -4,6 +4,8 @@
 extern int nodesnumber;
 extern int sourcenode;
 
+extern double diameter;
+
 extern igraph_matrix_t admatrix;
 extern igraph_t graph;
 extern igraph_matrix_t layout;
@@ -246,6 +248,7 @@ Fl_Round_Button *potentialconn;
 Fl_Button *setpotentialbutton;
 Fl_Button *done1;
 Fl_Check_Button *dissipatelatcheck;
+Fl_Check_Button *diamlatcheck;
 Fl_Value_Input *disslat;
 Fl_Value_Input *dnlat;
 
@@ -256,6 +259,7 @@ Fl_Value_Input *inprob;
 Fl_Value_Input *inedges;
 Fl_Button *done2;
 Fl_Check_Button *dissipaterancheck;
+Fl_Check_Button *diamrancheck;
 Fl_Value_Input *dissran;
 Fl_Value_Input *dnran;
 
@@ -270,6 +274,7 @@ Fl_Value_Input *inwall;
 Fl_Value_Input *instim;
 Fl_Button *done3;
 Fl_Check_Button *dissipatecluscheck;
+Fl_Check_Button *diamcluscheck;
 Fl_Value_Input *dissclus;
 Fl_Value_Input *dnclus;
 
@@ -287,6 +292,7 @@ Fl_Value_Input *inwall2l1;
 Fl_Value_Input *inwall2l2;
 Fl_Check_Button *dissipateclus2lcheck;
 Fl_Value_Input *dissclus2l;
+Fl_Check_Button *diamclus2check;
 Fl_Value_Input *dnclus2l;
 
 
@@ -864,6 +870,10 @@ void DialogueNewLat(void) {
     dnlat->value(0);
     ypos=ypos+widgh;
     
+
+    ypos=ypos+20;
+    widgh=BUTTON_H1;
+    diamlatcheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Calc. Diameter (Dijkstra)");
     ypos=ypos+widgh;
     
     
@@ -986,6 +996,32 @@ void generatelatticecb(Fl_Widget *, void *) {
     
     islattice=1;  rewrite=1;
     israndomER1=0; isclustered=0;
+    
+    /*diameter calculation*/
+    if((int)diamlatcheck->value()==1){igraph_t tempgraph;
+        igraph_vector_t weight;
+        igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+        igraph_vector_init(&weight,0);
+        EANV(&tempgraph,"w",&weight);
+        
+        
+        igraph_diameter_dijkstra(&tempgraph,
+                                 &weight,
+                                 &diameter,
+                                 0,
+                                 0,
+                                 0,
+                                 1,
+                                 0);
+        
+        
+        igraph_destroy(&tempgraph);
+        igraph_vector_destroy(&weight);
+        
+        printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
+    }
+    else{diameter=0;}
+    
     graphisloaded=1;
     newgraph=1;
     
@@ -1078,7 +1114,12 @@ void DialogueNewRand(void) {
     dnran->value(0);
     ypos=ypos+widgh;
     
+    
+    ypos=ypos+20;
+    widgh=BUTTON_H1;
+    diamrancheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Calc. Diameter (Dijkstra)");
     ypos=ypos+widgh;
+    
     
     widgh=BUTTON_H1;
     ypos=ypos+30;
@@ -1146,6 +1187,31 @@ void generaterandom1cb(Fl_Widget *, void *) {
         in5->maximum(igraph_vcount(&graph)-1);
         
         havepath=0;
+        
+        /*diameter calculation*/
+        if((int)diamrancheck->value()==1){igraph_t tempgraph;
+            igraph_vector_t weight;
+            igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+            igraph_vector_init(&weight,0);
+            EANV(&tempgraph,"w",&weight);
+            
+            
+            igraph_diameter_dijkstra(&tempgraph,
+                                     &weight,
+                                     &diameter,
+                                     0,
+                                     0,
+                                     0,
+                                     1,
+                                     0);
+            
+            
+            igraph_destroy(&tempgraph);
+            igraph_vector_destroy(&weight);
+            
+            printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
+        }
+        else {diameter=0;}
     }
     graphisloaded=1;
 }
@@ -1270,8 +1336,11 @@ void DialogueNewClus(void) {
     dnclus->value(0);
     ypos=ypos+widgh;
     
-    ypos=ypos+widgh;
     
+    ypos=ypos+20;
+    widgh=BUTTON_H1;
+    diamcluscheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Calc. Diameter (Dijkstra)");
+    ypos=ypos+widgh;
     
     
     
@@ -1356,6 +1425,33 @@ void generateclustsymcb(Fl_Widget *, void *) {
         in5->maximum(igraph_vcount(&graph)-1);
         
         havepath=0;
+        
+        /*diameter calculation*/
+        if((int)diamcluscheck->value()==1){igraph_t tempgraph;
+            igraph_vector_t weight;
+            igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+            igraph_vector_init(&weight,0);
+            EANV(&tempgraph,"w",&weight);
+            
+            
+            igraph_diameter_dijkstra(&tempgraph,
+                                     &weight,
+                                     &diameter,
+                                     0,
+                                     0,
+                                     0,
+                                     1,
+                                     0);
+            
+            
+            igraph_destroy(&tempgraph);
+            igraph_vector_destroy(&weight);
+            
+            printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
+        
+        }
+        else {diameter=0;}
+        
     }
     graphisloaded=1;
     isclustered=1;
@@ -1517,7 +1613,7 @@ void DialogueNewClusGer2(void) {
     ypos=ypos+widgh;
     
     
-    ypos=ypos+100;
+    ypos=ypos+50;
     widgh=30;
     dissipateclus2lcheck = new Fl_Check_Button(xpos,ypos,widgw,widgh, "Dissipate");
     ypos=ypos+widgh;
@@ -1542,6 +1638,11 @@ void DialogueNewClusGer2(void) {
     dnclus2l->value(0);
     ypos=ypos+widgh;
     
+    
+    ypos=ypos+20;
+    widgh=BUTTON_H1;
+    diamclus2check = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Calc. Diameter (Dijkstra)");
+    ypos=ypos+widgh;
     
     
     
@@ -1656,6 +1757,33 @@ void generateclusger2cb(Fl_Widget *, void *) {
         in5->maximum(igraph_vcount(&graph)-1);
         
         havepath=0;
+        
+        
+        /*diameter calculation*/
+        if((int)diamclus2check->value()==1){igraph_t tempgraph;
+        igraph_vector_t weight;
+        igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+        igraph_vector_init(&weight,0);
+        EANV(&tempgraph,"w",&weight);
+        
+        
+        igraph_diameter_dijkstra(&tempgraph,
+                                 &weight,
+                                 &diameter,
+                                 0,
+                                 0,
+                                 0,
+                                 1,
+                                 0);
+        
+        
+        igraph_destroy(&tempgraph);
+        igraph_vector_destroy(&weight);
+        
+        printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
+        }
+        else {diameter=0;}
+        
     }
     graphisloaded=1;
     isclustered=1;

@@ -100,6 +100,9 @@ igraph_matrix_t estates;    //EIGENSTATES OF ADMATRIX
 int nodesnumber;
 int sourcenode;
 
+double diameter;
+
+
 int ticks;      //time elapsed
 int tickstep;   //time espales in a single "step" a steprun
 double deltat;  //delta t (makes it faster or slower if "ispii" (i.e. loops) is activated
@@ -600,17 +603,17 @@ void mainidle_cb(void*){    //this routine updates the program.
         
         if(islattice==1 && rewrite==1){
             if(istoro==1){
-                sprintf(s,"Nodes=%i\nToroidal\nLattice\n%iD Side=%i",nodesnumber, latticedim, latticeside);
+                sprintf(s,"Nodes=%i\nToroidal\nLattice\n%iD Side=%i\nDiamet =\n%f",nodesnumber, latticedim, latticeside, diameter);
             }
             else{
-                sprintf(s,"Nodes=%i\nLattice\n%iD Side=%i",nodesnumber, latticedim, latticeside);
+                sprintf(s,"Nodes=%i\nLattice\n%iD Side=%i\nDiamet =\n%f",nodesnumber, latticedim, latticeside,diameter);
             }
             
            databuff->text(s);
             
         }
         else if(rewrite==1){
-            sprintf(s,"Nodes=%i",nodesnumber);
+            sprintf(s,"Nodes=%i\nDiamet =\n%f",nodesnumber,diameter);
            databuff->text(s);
         }
         
