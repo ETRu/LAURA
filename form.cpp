@@ -7,6 +7,7 @@ extern int sourcenode;
 extern double diameter;
 
 extern igraph_matrix_t admatrix;
+extern igraph_matrix_t adtemp;
 extern igraph_t graph;
 extern igraph_matrix_t layout;
 extern igraph_matrix_t density, densityold, state, statenew, loadedstate;
@@ -24,6 +25,9 @@ extern int beginner;
 extern int totrun;
 extern int maxtime;
 extern double deltat;
+
+extern int lparticles;
+extern int ltotrun;
 
 extern int ticks;
 extern int tickstep;
@@ -50,6 +54,7 @@ extern int drfluxes;
 extern int runningcontrol;
 extern int amstepping; extern int step;
 extern int graphisloaded;
+extern int stateisloaded;
 extern int cleared;
 extern int islattice;
 extern int istoro;
@@ -129,6 +134,7 @@ Fl_Round_Button *roundTAS;
 Fl_Check_Button *roundTASRAN;
 Fl_Round_Button *roundRAN;
 Fl_Round_Button *roundSTAT;
+Fl_Round_Button *roundLOAD;
 Fl_Value_Input *in5;
 Fl_Value_Input *in6;
 
@@ -162,8 +168,9 @@ Fl_Button *bsetlayout;
 Fl_Button *buttonexit;
 
 
-
-
+//load/save state
+Fl_Button *bloadstate; Fl_File_Chooser *loadstatechooser ;
+Fl_Button *bsavestate; Fl_File_Chooser *savestatechooser ;
 
 //bottom buttons
 Fl_Group *bottomgroup;
@@ -431,15 +438,17 @@ void goturborun(){
         
     }
     
+    else if((int)roundLOAD->value()==1 && stateisloaded==1){
+        InitialStateLOAD();
+        in1->value(lparticles);
+        in3->value(ltotrun);
+        maxtime=(int)in4->value();
+    }
+    
     else if(havepath==0){
         InitialStateTAS(0,0,(int)in3->value()); roundTAS->value(1);
     }
-    else if(haveloadedstate==1){
-        InitialStateLOAD();
-        in1->value(particles);
-        in3->value(totrun);
-        maxtime=(int)in4->value();
-    }
+  
     
     
     //set OUTPUT
@@ -998,9 +1007,39 @@ void generatelatticecb(Fl_Widget *, void *) {
     israndomER1=0; isclustered=0;
     
     /*diameter calculation*/
-    if((int)diamlatcheck->value()==1){igraph_t tempgraph;
+    if((int)diamlatcheck->value()==1){
+        igraph_t tempgraph;
         igraph_vector_t weight;
-        igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+        
+        igraph_matrix_init(&adtemp,0,0);
+        igraph_matrix_update(&adtemp,&admatrix);
+    
+        int nnn;
+        nnn=nodesnumber;
+        if((int)dissipatelatcheck->value()==1){
+            igraph_matrix_remove_col(&adtemp,nnn-1);
+            igraph_matrix_remove_row(&adtemp,nnn-1);
+            nnn=nnn-1;
+            igraph_vector_t row;
+            igraph_vector_init(&row,nnn);
+            for (int i=0; i<nnn; ++i) {
+                igraph_matrix_get_row(&adtemp,&row,i);
+                
+                igraph_vector_scale(&row, 1./(igraph_vector_sum(&row)));
+                igraph_matrix_set_row(&adtemp, &row,i);
+                
+            }
+            igraph_vector_destroy(&row);
+            
+        }
+        
+        
+        for(int i=0;i<nnn;++i){
+            for (int j=0; j<nnn; ++j) {
+                MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
+            }}
+        
+        igraph_weighted_adjacency(&tempgraph, &adtemp,IGRAPH_ADJ_DIRECTED, "w",0);
         igraph_vector_init(&weight,0);
         EANV(&tempgraph,"w",&weight);
         
@@ -1017,6 +1056,7 @@ void generatelatticecb(Fl_Widget *, void *) {
         
         igraph_destroy(&tempgraph);
         igraph_vector_destroy(&weight);
+        igraph_matrix_destroy(&adtemp);
         
         printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
     }
@@ -1027,12 +1067,17 @@ void generatelatticecb(Fl_Widget *, void *) {
     
     dial1->hide();    dialnewnet->hide();
     
-    clear();
     
     roundTAS->setonly();
+    roundLOAD->deactivate();
     in5->maximum(igraph_vcount(&graph)-1);
     
+    
+    
     havepath=0;
+    
+    
+    clear();
     
 }
 
@@ -1181,17 +1226,47 @@ void generaterandom1cb(Fl_Widget *, void *) {
         
         dial2->hide();    dialnewnet->hide();
         
-        clear();
+        
         
         roundTAS->setonly();
+        roundLOAD->deactivate();
         in5->maximum(igraph_vcount(&graph)-1);
-        
         havepath=0;
         
         /*diameter calculation*/
-        if((int)diamrancheck->value()==1){igraph_t tempgraph;
+        if((int)diamrancheck->value()==1){
+            igraph_t tempgraph;
             igraph_vector_t weight;
-            igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+            
+            igraph_matrix_init(&adtemp,0,0);
+            igraph_matrix_update(&adtemp,&admatrix);
+            
+            int nnn;
+            nnn=nodesnumber;
+            if((int)dissipaterancheck->value()==1){
+                igraph_matrix_remove_col(&adtemp,nnn-1);
+                igraph_matrix_remove_row(&adtemp,nnn-1);
+                nnn=nnn-1;
+                igraph_vector_t row;
+                igraph_vector_init(&row,nnn);
+                for (int i=0; i<nnn; ++i) {
+                    igraph_matrix_get_row(&adtemp,&row,i);
+                    
+                    igraph_vector_scale(&row, 1./(igraph_vector_sum(&row)));
+                    igraph_matrix_set_row(&adtemp, &row,i);
+                    
+                }
+                igraph_vector_destroy(&row);
+                
+            }
+            
+            
+            for(int i=0;i<nnn;++i){
+                for (int j=0; j<nnn; ++j) {
+                    MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
+                }}
+            
+            igraph_weighted_adjacency(&tempgraph, &adtemp,IGRAPH_ADJ_DIRECTED, "w",0);
             igraph_vector_init(&weight,0);
             EANV(&tempgraph,"w",&weight);
             
@@ -1208,12 +1283,16 @@ void generaterandom1cb(Fl_Widget *, void *) {
             
             igraph_destroy(&tempgraph);
             igraph_vector_destroy(&weight);
+            igraph_matrix_destroy(&adtemp);
             
             printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
         }
-        else {diameter=0;}
+        else{diameter=0;}
+
     }
     graphisloaded=1;
+    havepath=0;
+    clear();
 }
 
 
@@ -1418,18 +1497,48 @@ void generateclustsymcb(Fl_Widget *, void *) {
         newgraph=1;
         
         dial3->hide();    dialnewnet->hide();
-        
-        clear();
+      
         
         roundRAN->setonly();
+        roundLOAD->deactivate();
         in5->maximum(igraph_vcount(&graph)-1);
         
         havepath=0;
         
         /*diameter calculation*/
-        if((int)diamcluscheck->value()==1){igraph_t tempgraph;
+        if((int)diamcluscheck->value()==1){
+            igraph_t tempgraph;
             igraph_vector_t weight;
-            igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
+            
+            igraph_matrix_init(&adtemp,0,0);
+            igraph_matrix_update(&adtemp,&admatrix);
+            
+            int nnn;
+            nnn=nodesnumber;
+            if((int)dissipatecluscheck->value()==1){
+                igraph_matrix_remove_col(&adtemp,nnn-1);
+                igraph_matrix_remove_row(&adtemp,nnn-1);
+                nnn=nnn-1;
+                igraph_vector_t row;
+                igraph_vector_init(&row,nnn);
+                for (int i=0; i<nnn; ++i) {
+                    igraph_matrix_get_row(&adtemp,&row,i);
+                    
+                    igraph_vector_scale(&row, 1./(igraph_vector_sum(&row)));
+                    igraph_matrix_set_row(&adtemp, &row,i);
+                    
+                }
+                igraph_vector_destroy(&row);
+                
+            }
+            
+            
+            for(int i=0;i<nnn;++i){
+                for (int j=0; j<nnn; ++j) {
+                   MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
+                }}
+            
+            igraph_weighted_adjacency(&tempgraph, &adtemp,IGRAPH_ADJ_DIRECTED, "w",0);
             igraph_vector_init(&weight,0);
             EANV(&tempgraph,"w",&weight);
             
@@ -1446,15 +1555,19 @@ void generateclustsymcb(Fl_Widget *, void *) {
             
             igraph_destroy(&tempgraph);
             igraph_vector_destroy(&weight);
+            igraph_matrix_destroy(&adtemp);
             
             printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
-        
         }
-        else {diameter=0;}
+        else{diameter=0;}
+
         
     }
     graphisloaded=1;
     isclustered=1;
+    havepath=0;
+    
+    clear();
     
     
     //print_matrix_ur(&admatrix,stdout);
@@ -1751,43 +1864,78 @@ void generateclusger2cb(Fl_Widget *, void *) {
         dial4->hide();
         dialnewnet->hide();
         
-        clear();
-        
         roundRAN->setonly();
+        roundLOAD->deactivate();
         in5->maximum(igraph_vcount(&graph)-1);
         
         havepath=0;
         
         
         /*diameter calculation*/
-        if((int)diamclus2check->value()==1){igraph_t tempgraph;
-        igraph_vector_t weight;
-        igraph_weighted_adjacency(&tempgraph, &admatrix,IGRAPH_ADJ_DIRECTED, "w",0);
-        igraph_vector_init(&weight,0);
-        EANV(&tempgraph,"w",&weight);
-        
-        
-        igraph_diameter_dijkstra(&tempgraph,
-                                 &weight,
-                                 &diameter,
-                                 0,
-                                 0,
-                                 0,
-                                 1,
-                                 0);
-        
-        
-        igraph_destroy(&tempgraph);
-        igraph_vector_destroy(&weight);
-        
-        printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
+        if((int)diamclus2check->value()==1){
+            igraph_t tempgraph;
+            igraph_vector_t weight;
+            
+            igraph_matrix_init(&adtemp,0,0);
+            igraph_matrix_update(&adtemp,&admatrix);
+            
+            int nnn;
+            nnn=nodesnumber;
+            if((int)dissipateclus2lcheck->value()==1){
+                igraph_matrix_remove_col(&adtemp,nnn-1);
+                igraph_matrix_remove_row(&adtemp,nnn-1);
+                nnn=nnn-1;
+                igraph_vector_t row;
+                igraph_vector_init(&row,nnn);
+                for (int i=0; i<nnn; ++i) {
+                    igraph_matrix_get_row(&adtemp,&row,i);
+                    
+                    igraph_vector_scale(&row, 1./(igraph_vector_sum(&row)));
+                    igraph_matrix_set_row(&adtemp, &row,i);
+                    
+                }
+                igraph_vector_destroy(&row);
+                
+            }
+            
+            
+            for(int i=0;i<nnn;++i){
+                for (int j=0; j<nnn; ++j) {
+                    MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
+                }
+            }
+            
+            igraph_weighted_adjacency(&tempgraph, &adtemp,IGRAPH_ADJ_DIRECTED, "w",0);
+            igraph_vector_init(&weight,0);
+            EANV(&tempgraph,"w",&weight);
+            
+            
+            igraph_diameter_dijkstra(&tempgraph,
+                                     &weight,
+                                     &diameter,
+                                     0,
+                                     0,
+                                     0,
+                                     1,
+                                     0);
+            
+            
+            igraph_destroy(&tempgraph);
+            igraph_vector_destroy(&weight);
+            igraph_matrix_destroy(&adtemp);
+            
+            printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
         }
-        else {diameter=0;}
+        else{diameter=0;}
+
         
     }
     graphisloaded=1;
     isclustered=1;
+    havepath=0;
     
+    clear();
+
     
     printf("\n\n\n\n");
     //print_matrix_ur(&admatrix,stdout);
@@ -1872,6 +2020,7 @@ void prevcb(Fl_Widget *, void *) {
     if((int)roundTAS->value()==1)InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),(int)in3->value());
     else if((int)roundRAN->value()==1)InitialStateRAN((int)in6->value(), (int)in3->value());
     else if((int)roundSTAT->value()==1) InitialStateSTAT((int)in3->value());
+    else if((int)roundLOAD->value()==1) InitialStateLOAD();
    
     
 }
@@ -2024,6 +2173,13 @@ void run(){
                 in1->activate();
             }
             
+            else if((int)roundLOAD->value()==1 && stateisloaded==1){
+                InitialStateLOAD();
+                in1->value(lparticles);
+                in3->value(ltotrun);
+                maxtime=(int)in4->value();
+            }
+            
             
             else if(havepath==0){
                 InitialStateTAS(0,0,(int)in3->value()); roundTAS->value(1);
@@ -2031,12 +2187,7 @@ void run(){
                 in3->activate();
                 in1->activate();
             }
-            else if(haveloadedstate==1){
-                InitialStateLOAD();
-                in1->value(particles);
-                in3->value(totrun);
-                maxtime=(int)in4->value();
-            }
+            
             
             
             
@@ -2156,19 +2307,20 @@ void clear(){
     }
     
     
+    
+    else if((int)roundLOAD->value()==1 && stateisloaded==1){
+        InitialStateLOAD();
+        in1->value(lparticles);
+        in3->value(ltotrun);
+        maxtime=(int)in4->value();
+    }
+    
     else if(havepath==0){
         InitialStateTAS(0,0,(int)in3->value()); roundTAS->value(1);
         haveloadedstate=0;
         in3->activate();
         in1->activate();
     }
-    else if(haveloadedstate==1){
-        InitialStateLOAD();
-        in1->value(particles);
-        in3->value(totrun);
-        maxtime=(int)in4->value();
-    }
-    
     
     if(haveout==1){closeout(); haveout=0;}
     
@@ -2275,13 +2427,11 @@ void loadcb(Fl_Widget *, void *) {
         
         bsave->activate();
         
-        if (haveloadedstate==1) {
-            InitialStateLOAD();
-            in3->deactivate();
-            in1->deactivate();
-        }
-        
-        else {roundTAS->value(1);beginner=0; particles=100;}
+    
+        roundTAS->setonly();
+        roundLOAD->deactivate();
+    
+        beginner=0; particles=100;
         
         
         in1->value(particles);
@@ -2292,6 +2442,55 @@ void loadcb(Fl_Widget *, void *) {
     }
     
     
+    
+}
+
+
+
+
+//--------------------------------------------
+void loadstatecb(Fl_Widget *, void *) {
+    
+    
+    char inpath[5000];
+    
+    stateisloaded=0;
+    
+    if ( ! loadstatechooser ) {
+        loadstatechooser = new Fl_File_Chooser("", "", Fl_File_Chooser::SINGLE, "");
+    }
+    
+    loadstatechooser->directory("./");
+    loadstatechooser->filter(NULL);
+    loadstatechooser->label("Load State");
+    loadstatechooser->preview(0);
+    loadstatechooser->show();
+    
+    // Block until user picks something.
+    while(loadstatechooser->shown()) Fl::wait();
+    
+    // Print the results
+    if (  loadstatechooser->value() == NULL ) {
+        logDebug("\nNo file selected: state not loaded.\n");
+        stateisloaded=0;
+        return;
+    }
+    
+    sprintf(inpath,"%s",loadstatechooser->value());
+    
+    //open graph;
+    loadstate(inpath, &ltotrun, &lparticles);
+    
+    if(stateisloaded==0){  logDebug("\nState not loaded.\n");
+        return;}
+    
+    printf("\n\n LOADED PARTICLES:   %i    LOADED RUN:  %i \n\n ", lparticles, ltotrun );
+    
+    in1->value(lparticles);
+    in3->value(ltotrun);
+    
+    roundLOAD->activate();
+    roundLOAD->setonly();
     
     
 }
@@ -2349,6 +2548,40 @@ void savecb(Fl_Widget *, void *) {
     
 }
 
+
+//--------------------------------------------
+
+void savestateascb(Fl_Widget *, void *) {
+    
+    char filepath[100];
+    
+    if ( ! savestatechooser ) {
+        savestatechooser = new Fl_File_Chooser("", "*", Fl_File_Chooser::CREATE, "");
+    }
+    
+    savestatechooser->directory("./");
+    savestatechooser->filter(NULL);
+   savestatechooser->preview(0);
+    savestatechooser->label("Save STATE As");
+    
+    savestatechooser->show();
+    
+    // Block until user picks something.
+    while(savestatechooser->shown()) Fl::wait();
+    
+    // Print the results
+    if (  savestatechooser->value() == NULL ) {
+        logDebug("\nNo path selected.\n");
+        return;
+    }
+    
+    sprintf(filepath,"%s",savestatechooser->value());
+    
+    //save graph;
+    savestate(filepath);
+ 
+    
+}
 
 
 void changelayoutcb(Fl_Widget *, void *){
@@ -2915,10 +3148,10 @@ void CreateMyWindow(void) {
     
     widgh=20;
     ypos=ypos+25;
-    in2 = new Fl_Value_Input(xpos,ypos,BUTTON_WL,widgh, "Constraint:");
+    in2 = new Fl_Value_Input(xpos,ypos,BUTTON_WL,widgh, "Source Rate:");
     in2->align(FL_ALIGN_TOP_LEFT);
-    in2->step(1);
-    in2->minimum(1);
+    in2->step(0.001);
+    in2->minimum(0.01);
     in2->value(vincolo);
     ypos=ypos+widgh;
     
@@ -3002,7 +3235,7 @@ void CreateMyWindow(void) {
     
     
     widgh=20;
-    ypos=ypos+10;
+    ypos=ypos+0;
     roundRAN = new Fl_Round_Button(xpos+10,ypos,BUTTON_WL-10,widgh,"Random");
     roundRAN->type(FL_RADIO_BUTTON);
     roundRAN->setonly();
@@ -3020,15 +3253,23 @@ void CreateMyWindow(void) {
     
     
     widgh=20;
-    ypos=ypos+10;
+    ypos=ypos+5;
     roundSTAT = new Fl_Round_Button(xpos+10,ypos,BUTTON_WL-10,widgh,"Stat State");
     roundSTAT->type(FL_RADIO_BUTTON);
     roundSTAT->deactivate();
     ypos=ypos+widgh;
     
+    widgh=20;
+    ypos=ypos+5;
+    roundLOAD = new Fl_Round_Button(xpos+10,ypos,BUTTON_WL-10,widgh,"L.ded State");
+    roundLOAD->type(FL_RADIO_BUTTON);
+    roundLOAD->deactivate();
+    ypos=ypos+widgh;
+
+    
     
     widgh=20;
-    ypos=ypos+10;
+    ypos=ypos+5;
     Fl_Button *prev  = new Fl_Button(xpos+10, ypos, BUTTON_WL-10, widgh, "Preview");
     prev->color(FL_LIGHT2);
     ypos=ypos+widgh;
@@ -3040,7 +3281,7 @@ void CreateMyWindow(void) {
     
     
     widgh=20;
-    ypos=ypos+40;
+    ypos=ypos+20;
     setoutname = new Fl_Input(xpos,ypos,BUTTON_WL,widgh, "Output file:");
     setoutname->align(FL_ALIGN_TOP_LEFT);
     setoutname->labelfont(FL_BOLD);
@@ -3324,6 +3565,24 @@ void CreateMyWindow(void) {
     bottomgroup->deactivate();
     
     
+    xpos=LEFT_SPACE+1;
+    
+    ypos=ypos+40;
+    
+    widgh=25; widgw=150;
+    
+    xpos=xpos+80;
+    bloadstate = new Fl_Button(xpos, ypos, widgw, widgh, "Load State");
+    
+    xpos=xpos+widgw + 40;
+    
+    bsavestate = new Fl_Button(xpos, ypos, widgw, widgh, "Save State");
+    ypos=ypos+widgh;
+    
+    
+    
+    
+    
     ypos=30;
     xpos=LEFT_SPACE+1;
     pathbuff = new Fl_Text_Buffer();
@@ -3351,8 +3610,10 @@ void CreateMyWindow(void) {
  
     bnewnet->callback(newnetcb,0);
     bload->callback(loadcb,0);
+    bloadstate->callback(loadstatecb,0);
     bsaveas->callback(saveascb,0);
     bsave->callback(savecb,0);
+    bsavestate->callback(savestateascb,0);
     
     bsetlayout->callback(changelayoutcb,0);
     

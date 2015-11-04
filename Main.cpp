@@ -94,6 +94,7 @@ igraph_matrix_t dissipation;
 
 
 igraph_matrix_t admatrix;   //ADJACENCE MATRIX
+igraph_matrix_t adtemp; //used for temorary storages.
 
 igraph_matrix_t estates;    //EIGENSTATES OF ADMATRIX
 
@@ -134,6 +135,7 @@ int amstepping;     //stepping (smal steprun)
 int step;           //how long is a steprun
 int cleared;        //everything is cleared ( see void clear() in form.h )
 int graphisloaded;  //do I have a graph?
+int stateisloaded;  //do I have a state?
 int newgraph;       //i am working on a new graph?
 int islattice;      //is lattice graph?
 int istoro;         //is (lattice) toroidal?
@@ -216,14 +218,17 @@ int latticeside;
 
 
 //presets
-int vincolo=10000000;
+int vincolo=1;
 int threshold=1;
 int particles=10000;
 int beginner;
 int totrun=1;
 int maxtime=1000;
 
+//loading
 
+int lparticles;
+int ltotrun;
 
 
 
@@ -663,6 +668,7 @@ int main(int argc, char **argv) {
 	runningcontrol=0;
     cleared=1;
     graphisloaded=0;
+    stateisloaded=0;
 	newgraph=1;
     usesteady=0;
     ispii=0;
@@ -700,6 +706,8 @@ int main(int argc, char **argv) {
         igraph_matrix_init(&statenew, 0, 0);
         igraph_matrix_init(&flux, 0, 0);
         igraph_matrix_init(&loss, 0, 0);
+        
+        igraph_matrix_init(&loadedstate,0,0);
         
         igraph_matrix_init(&dissipation,0,0);
         

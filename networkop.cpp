@@ -9,6 +9,7 @@
 extern int nodesnumber;
 extern int sourcenode;
 extern igraph_matrix_t admatrix;
+extern igraph_matrix_t adtemp;
 extern igraph_t graph;
 extern igraph_t sgraph;
 extern igraph_matrix_t layout;
@@ -31,6 +32,7 @@ extern int rewrite;
 
 extern int havepath;
 extern int graphisloaded;
+extern int stateisloaded;
 extern int error;
 
 extern int usesteady;
@@ -702,7 +704,7 @@ void generateclustsym(int clusnumber, int clusdim, double interconn, double intr
     
     init_genrand(0);
     
-    igraph_matrix_t adtemp;
+
     igraph_t g;
     igraph_bool_t connected;
     
@@ -898,7 +900,7 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     igraph_matrix_t pots; //potentials of the clusters
     igraph_matrix_t wpots; // potentials of the wall
     
-    igraph_matrix_t adtemp;
+
     igraph_t g;
     igraph_bool_t connected;
     
@@ -1296,7 +1298,7 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     igraph_matrix_t pots; //potentials of the clusters
     igraph_matrix_t wpots; // potentials of the wall
     
-    igraph_matrix_t adtemp;
+
     igraph_t g;
     igraph_bool_t connected;
     igraph_vector_t row;
@@ -2104,7 +2106,7 @@ void loadnetwork(char *mypath) {
     int mytempi;
     
     igraph_t graphtemp;
-    igraph_matrix_t adtemp;
+
     igraph_vector_t steadytemp;
     igraph_matrix_t statetemp;
     
@@ -2142,7 +2144,9 @@ void loadnetwork(char *mypath) {
     igraph_matrix_init(&adtemp,mynodesnumber,mynodesnumber);
     igraph_vector_init(&steadytemp,mynodesnumber);
     igraph_matrix_init(&statetemp,mynodesnumber,mytotrun);
-    igraph_matrix_init(&loadedstate,mynodesnumber,mytotrun);
+    
+    igraph_matrix_destroy(&loadedstate); igraph_matrix_init(&loadedstate,mynodesnumber,mytotrun);
+    
     
     
     //read PART I
@@ -2186,6 +2190,7 @@ void loadnetwork(char *mypath) {
     
     
     //read PART III
+    /*
     if ((s[0]!='#'||s[1]!='#'||s[2]!='#')&&(s[0]!='#'||s[1]!='e'||s[2]!='l'||s[3]!='f')){
         logDebug("\nERROR: CORRUPTED LAURAFILE (4)\n");
         error=1;  rewrite=1;
@@ -2208,6 +2213,7 @@ void loadnetwork(char *mypath) {
         fgets(s, 100, instream);
         
     }
+    */
     
     //read END
     if (s[0]!='#'||s[1]!='e'||s[2]!='l'||s[3]!='f'){
@@ -2321,6 +2327,74 @@ void loadnetwork(char *mypath) {
 
 
 //--------------------------------------------
+void loadstate(char *mypath, int *nrun, int *npart) {
+    
+    int mytotrun;
+    int mynodesnumber;
+    
+    double mytempd;
+    
+    
+    FILE *instream;
+    instream=fopen(mypath,"r");
+    
+    fscanf(instream,"%i",&mynodesnumber); logDebug("\nmynodesnumber = %i\n",mynodesnumber);
+    
+    if(mynodesnumber!=nodesnumber){
+        logDebug("\nERROR: PROBLEMS LOADING STATE, WRONG NUMBER OF NODES (loaded %i, but network has %i) \n \n", mynodesnumber, nodesnumber);
+        error=1; rewrite=1;
+        stateisloaded=0;
+        return;}
+    
+    fscanf(instream,"%i",&mytotrun); logDebug("\nmytotrun = %i\n",mytotrun);
+    
+    igraph_matrix_destroy(&loadedstate);
+    igraph_matrix_init(&loadedstate,mynodesnumber,mytotrun);
+    
+    int mypart=0;
+    
+    {
+        
+        for(int i=0;i<mynodesnumber;++i){
+            for(int j=0;j<mytotrun;++j){
+                
+                
+                if(fscanf(instream,"%lf",&mytempd)==EOF){
+                    logDebug("\nERROR: LOADING STATE, FILE FINISHED TOO SOON! \n");
+                    error=1; rewrite=1;
+                    stateisloaded=0;
+                    return;}
+                
+                MATRIX(loadedstate,i,j)=mytempd;
+                
+                mypart=mypart+mytempd;
+            }
+        }
+        
+        stateisloaded=1;
+        
+    }
+    
+    //print_matrix_ur(&loadedstate,stdout);
+    
+    mypart=mypart/mytotrun;
+    
+    logDebug("\nState file correctly read.\n");fflush(stdout);
+    
+    
+    *npart=mypart;
+    *nrun=mytotrun;
+    
+    fclose(instream);
+    
+   }
+
+
+
+
+
+
+//--------------------------------------------
 
 void savenetwork(char *mypath) {
     
@@ -2358,9 +2432,9 @@ void savenetwork(char *mypath) {
     }
     
     //PART III: CURRENT STATE
-    fprintf(outstream,"###\n");
+    /*fprintf(outstream,"###\n");
     print_matrix(&state, outstream);
-    
+    */
     
     fprintf(outstream,"#elf\n");
     
@@ -2377,7 +2451,45 @@ void savenetwork(char *mypath) {
 
 
 
+//--------------------------------------------
 
+void savestate(char *mypath) {
+    
+    
+    FILE *outstream;
+    outstream=fopen(mypath,"w");
+    
+    logDebug("\n SAVING... \n");
+    
+    //open file where i'll save
+    if( (outstream=fopen(mypath,"w")) ==NULL) {
+        logDebug("\nERROR SAVING\n");
+        sprintf(errorstring,"ERROR\nSAVING\nCANT\nOPEN\n%s",mypath);
+        error=1;  rewrite=1;
+        return;
+    }
+    
+    
+    //----------------- WRITE A STATE FILE::::::::::::::::
+    
+    //head
+    fprintf(outstream,"%i\n",nodesnumber);
+    fprintf(outstream,"%i\n",totrun);
+    
+    // CURRENT STATE
+    
+    print_matrix(&state, outstream);
+    
+    fclose(outstream);
+    
+    
+    havepath=1;
+    
+    error=0;
+    
+    
+    
+}
 
 
 

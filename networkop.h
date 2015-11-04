@@ -51,6 +51,8 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
 
 
 //-------------------------------------------- LOAD / SAVE NETWORKS
+void loadstate(char *mypath, int *nrun, int *npart);
+void savestate(char *mypath);
 
 void loadnetwork(char *mypath);
 void savenetwork(char *mypath);

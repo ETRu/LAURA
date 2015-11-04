@@ -82,8 +82,10 @@ void exitcb(Fl_Widget *, void *);
 
 // load - save - save as
 void loadcb(Fl_Widget *, void *);
+void loadstatecb(Fl_Widget *, void *);
 void saveascb(Fl_Widget *, void *);
 void savecb(Fl_Widget *, void *);
+void savestateascb(Fl_Widget *, void *);
 
 //runs
 void run();
