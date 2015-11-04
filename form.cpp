@@ -40,6 +40,8 @@ extern FILE * output4;
 extern FILE * output5;
 extern FILE * output6;
 extern FILE * output7;
+extern FILE * outputDETAILS;
+extern FILE * outputSTATE;
 
 extern int framexmin, framexmax, frameymin, frameymax;
 
@@ -70,6 +72,10 @@ extern int ispii;
 extern int havecstop;
 extern int isrelaxed;
 extern int haveloadedstate;
+extern int isdissipating;
+extern int israndomsources;
+
+extern int istjob;
 
 extern int rewrite;
 
@@ -151,6 +157,7 @@ Fl_Check_Button *drawlinks;
 Fl_Check_Button *drawfluxes;
 Fl_Button *clearbutton;
 Fl_Button *turbobutton;
+Fl_Button *tjobbutton;
 
 
 // right column buttns
@@ -255,6 +262,7 @@ Fl_Round_Button *potentialconn;
 Fl_Button *setpotentialbutton;
 Fl_Button *done1;
 Fl_Check_Button *dissipatelatcheck;
+Fl_Check_Button *ransourcelatcheck;
 Fl_Check_Button *diamlatcheck;
 Fl_Value_Input *disslat;
 Fl_Value_Input *dnlat;
@@ -266,6 +274,7 @@ Fl_Value_Input *inprob;
 Fl_Value_Input *inedges;
 Fl_Button *done2;
 Fl_Check_Button *dissipaterancheck;
+Fl_Check_Button *ransourcerancheck;
 Fl_Check_Button *diamrancheck;
 Fl_Value_Input *dissran;
 Fl_Value_Input *dnran;
@@ -281,6 +290,7 @@ Fl_Value_Input *inwall;
 Fl_Value_Input *instim;
 Fl_Button *done3;
 Fl_Check_Button *dissipatecluscheck;
+Fl_Check_Button *ransourcecluscheck;
 Fl_Check_Button *diamcluscheck;
 Fl_Value_Input *dissclus;
 Fl_Value_Input *dnclus;
@@ -298,6 +308,7 @@ Fl_Value_Input *inclusdim2l;
 Fl_Value_Input *inwall2l1;
 Fl_Value_Input *inwall2l2;
 Fl_Check_Button *dissipateclus2lcheck;
+Fl_Check_Button *ransourceclus2lcheck;
 Fl_Value_Input *dissclus2l;
 Fl_Check_Button *diamclus2check;
 Fl_Value_Input *dnclus2l;
@@ -338,6 +349,12 @@ Fl_Button *turbogo;
 
 
 
+//turbo job dial
+Fl_Window    *dialtjob;
+Fl_Button *tjobgo;
+
+
+
 int initdrawbut=0;
 
 
@@ -354,7 +371,7 @@ void TurboDial(void) {
     int ypos, xpos, widgw, widgh;
     
     char text[1000];
-
+    
     
     w_est= DIAL_WT;   h_est= 260;
     
@@ -371,7 +388,7 @@ void TurboDial(void) {
     //turbotext->labelfont(FL_BOLD);
     turbotext->align(FL_ALIGN_INSIDE + FL_ALIGN_TOP_LEFT );
     
-
+    
     turbotext->label("WARNING  \n You won\'t be able to access LAURA during TURBO RUN.\n\nPlease check --all-- your settings before TURBO RUN.\n\nIf you have to kill a TURBO RUN, kill the main program.");
     
     ypos=ypos+widgh;
@@ -421,7 +438,7 @@ void goturborun(){
     totrun=(int)in3->value();
     maxtime=(int)in4->value();
     ispii=(int)pii->value();
-   
+    
     if ( (int)roundTAS->value()==1 ){
         logDebug("\nTAS initial state.\n");
         InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),(int)in3->value());
@@ -448,11 +465,14 @@ void goturborun(){
     else if(havepath==0){
         InitialStateTAS(0,0,(int)in3->value()); roundTAS->value(1);
     }
-  
+    
     
     
     //set OUTPUT
-    openout();
+    
+    char toutstring[100];
+    sprintf(toutstring,"-");
+    openout(toutstring);
     
     TurboRun((double)indt->value());
     
@@ -469,6 +489,383 @@ void goturbocb(Fl_Widget *, void *) {
     
 }
 
+
+Fl_Value_Input *tjintime;
+Fl_Value_Input *tjinrun;
+
+Fl_Value_Input *tjinpfrom;
+Fl_Value_Input *tjinpto;
+Fl_Value_Input *tjinpstep;
+
+Fl_Value_Input *tjintfrom;
+Fl_Value_Input *tjintto;
+Fl_Value_Input *tjintstep;
+
+Fl_Value_Input *tjinsfrom;
+Fl_Value_Input *tjinsto;
+Fl_Value_Input *tjinsstep;
+
+
+void TJobDial(void) {
+    
+    int w_est,h_est;
+    int ypos, xpos, widgw, widgh;
+    
+    char text[1000];
+    
+    w_est= DIAL_WT*2;   h_est= 600;
+    
+    dialtjob = new Fl_Window(w_est,h_est,"Turbo Job");
+    dialtjob->set_modal();
+    
+    ypos=BORDER1;
+    xpos=BORDER1;
+    
+    
+    widgh=50;
+    widgw=(2*DIAL_WT-(2*BORDER1)-(2*BORDER1));
+    Fl_Box *tjobtext = new Fl_Box(xpos,ypos,widgw,widgh, "");
+    //turbotext->labelfont(FL_BOLD);
+    tjobtext->align(FL_ALIGN_INSIDE + FL_ALIGN_TOP );
+    
+    
+    tjobtext->label("     WARNING!      You won\'t be able to access LAURA during TURBO JOB.     *:. Please check --all-- your settings. .:* \n If you have to kill a TURBO JOB, kill the main program.");
+    
+    ypos=ypos+widgh;
+    
+    xpos=BORDER1;
+    
+    xpos=xpos+200;
+    
+    widgh=20; widgw=100;
+    
+    ypos=ypos+20;
+    
+    tjintime = new Fl_Value_Input(xpos,ypos,widgw,widgh, "Time: ");
+    tjintime->align(FL_ALIGN_LEFT);
+    tjintime->step(1);
+    tjintime->minimum(1);
+    tjintime->value(10000);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+20;
+    
+    tjinrun = new Fl_Value_Input(xpos,ypos,widgw,widgh, "Contemp. Runs: ");
+    tjinrun ->align(FL_ALIGN_LEFT);
+    tjinrun ->step(1);
+    tjinrun ->minimum(1);
+    tjinrun ->value(1);
+    ypos=ypos+widgh;
+    
+    ypos=ypos+40;
+    
+    xpos=BORDER1;
+    
+    xpos=xpos+200;
+    
+    tjinpfrom = new Fl_Value_Input(xpos,ypos,widgw,widgh, "# Particles         ----- FROM: ");
+    tjinpfrom ->align(FL_ALIGN_LEFT);
+    tjinpfrom ->step(1);
+    tjinpfrom ->minimum(1);
+    tjinpfrom ->value(100);
+    
+    xpos=xpos+widgw+100;
+    tjinpto = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- TO: ");
+    tjinpto ->align(FL_ALIGN_LEFT);
+    tjinpto ->step(1);
+    tjinpto ->minimum(1);
+    tjinpto ->value(1000);
+    
+    xpos=xpos+widgw+100;
+    tjinpstep = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- STEPS: ");
+    tjinpstep ->align(FL_ALIGN_LEFT);
+    tjinpstep ->step(1);
+    tjinpstep ->minimum(1);
+    tjinpstep ->value(2);
+    
+    
+    
+    ypos=ypos+40;
+    
+    xpos=BORDER1;
+    
+    xpos=xpos+200;
+    
+    tjintfrom = new Fl_Value_Input(xpos,ypos,widgw,widgh, "Threshold         ----- FROM: ");
+    tjintfrom ->align(FL_ALIGN_LEFT);
+    tjintfrom ->step(1);
+    tjintfrom ->minimum(0);
+    tjintfrom ->value(0);
+    
+    xpos=xpos+widgw+100;
+    tjintto = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- TO: ");
+    tjintto ->align(FL_ALIGN_LEFT);
+    tjintto ->step(1);
+    tjintto ->minimum(0);
+    tjintto ->value(1);
+    
+    xpos=xpos+widgw+100;
+    tjintstep = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- STEPS: ");
+    tjintstep ->align(FL_ALIGN_LEFT);
+    tjintstep ->step(1);
+    tjintstep ->minimum(1);
+    tjintstep ->value(2);
+    
+    
+    ypos=ypos+40;
+    
+    xpos=BORDER1;
+    
+    xpos=xpos+200;
+    
+    tjinsfrom = new Fl_Value_Input(xpos,ypos,widgw,widgh, "Source Rate         ----- FROM: ");
+    tjinsfrom ->align(FL_ALIGN_LEFT);
+    tjinsfrom ->step(0.00001);
+    tjinsfrom ->minimum(0);
+    tjinsfrom ->value(1);
+    
+    xpos=xpos+widgw+100;
+    tjinsto = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- TO: ");
+    tjinsto ->align(FL_ALIGN_LEFT);
+    tjinsto ->step(0.00001);
+    tjinsto ->minimum(0);
+    tjinsto ->value(2);
+    
+    xpos=xpos+widgw+100;
+    tjinsstep = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- STEPS: ");
+    tjinsstep ->align(FL_ALIGN_LEFT);
+    tjinsstep ->step(1);
+    tjinsstep ->minimum(1);
+    tjinsstep ->value(2);
+    
+    
+    
+    
+    
+    
+    xpos=BORDER1;
+    
+    ypos=ypos+50;
+    widgh=BUTTON_H;
+    widgw=(2*DIAL_WT-(2*BORDER1)-(2*BORDER1))/2;
+    Fl_Button *tjobgo = new Fl_Button(xpos, ypos, widgw, widgh, "RUN Turbo Job");
+    tjobgo->labelfont(FL_BOLD);
+    xpos=xpos+widgw+2*BORDER1;
+    
+    widgh=BUTTON_H;
+    Fl_Button *canceltjob = new Fl_Button(xpos, ypos, widgw, widgh, "Cancel");
+    ypos=ypos+widgh;
+    
+    ypos=ypos+10;
+    h_est=ypos;
+    dialtjob->size(w_est,h_est);
+    
+    canceltjob->callback(exitdialtjobcb,0);
+    tjobgo->callback(gotjobcb,0);
+    
+    dialtjob->end();
+    dialtjob->show();
+    
+    
+}
+
+
+
+
+
+void exitdialtjobcb(Fl_Widget *, void *){
+    dialtjob->hide();
+}
+
+
+
+
+
+void gotjob(){
+    
+    int minp, maxp, stepsp;
+    int mint, maxt, stepst;
+    float mins, maxs; int stepss;
+    
+    int totjob;
+    
+    int dep, det; float des;
+    
+    totrun=(int)tjinrun->value();
+    maxtime=(int)tjintime->value();
+    
+    minp = (int)tjinpfrom->value();
+    if( (int)tjinpto->value() < minp ){minp = (int)tjinpto->value();}
+    
+    mint = (int)tjintfrom->value();
+    if( (int)tjintto->value() < mint ){mint = (int)tjintto->value();}
+    
+    mins = (float)tjinsfrom->value();
+    if( (float)tjinsto->value() < mins ){mins = (float)tjinsto->value();}
+    
+    
+    maxp = (int)tjinpto->value();
+    if( (int)tjinpfrom->value() > maxp ){maxp = (int)tjinpfrom->value();}
+    
+    maxt = (int)tjintto->value();
+    if( (int)tjintfrom->value() > maxt ){maxt = (int)tjintfrom->value();}
+    
+    maxs = (float)tjinsto->value();
+    if( (float)tjinsfrom->value() > maxs ){maxs = (float)tjinsfrom->value();}
+    
+    stepsp= (int)tjinpstep->value();
+    stepst= (int)tjintstep->value();
+    stepss= (int)tjinsstep->value();
+    
+    dep = floor((float)(maxp-minp)/stepsp); if(dep==0){dep=1;}
+    printf("\n maxp=%i minp=%i stepsp=%i dep=%i \n", maxp, minp, stepsp, dep);
+    det = floor((float)(maxt-mint)/stepst); if(det==0){det=1;}
+    printf("\n maxt=%i mint=%i stepst=%i det=%i \n", maxt, mint, stepst, det);
+    des = (maxs-mins)/stepss; if(des==0){des=1;}
+    printf("\n maxs=%f mins=%f stepss=%i des=%f \n", maxs, mins, stepss, des);
+    
+    totjob=stepsp*stepst*stepss;
+    
+    int ccc=0;
+    
+    for (int ppp=0; ppp<stepsp; ++ppp) {
+        
+        particles = minp + ppp*dep;
+        
+        for (int ttt=0; ttt<stepst; ++ttt) {
+        
+            threshold = mint + ttt*det;
+            
+            
+            for(int sss=0; sss<stepss; ++sss)
+                
+            {
+            
+                vincolo = mins + sss*des;
+                
+                ++ccc;
+                printf("\n");
+                logDebug(" [%i/%i] particles = %i | threshold = %i | vincolo = %f", ccc , totjob , particles, threshold, vincolo);
+                
+                clear();
+                
+                //set parameters
+                
+                ispii=(int)pii->value();
+                
+                if ( (int)roundTAS->value()==1 ){
+                    logDebug("\nTAS initial state.\n");
+                    InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),totrun);
+                    
+                }
+                else if((int)roundRAN->value()==1){
+                    logDebug("\nRAN initial state.\n");
+                    InitialStateRAN((int)in6->value(), totrun);
+                    
+                }
+                else if((int)roundSTAT->value()==1){
+                    logDebug("\nSTAT initial state.\n");
+                    InitialStateSTAT(totrun);
+                    
+                }
+                
+                else if((int)roundLOAD->value()==1 && stateisloaded==1 && lparticles==particles && ltotrun==totrun){
+                    InitialStateLOAD();
+                    in1->value(lparticles);
+                    in3->value(ltotrun);
+                    maxtime=(int)in4->value();
+                }
+                
+                else{
+                    InitialStateTAS(0,0,totrun); roundTAS->setonly();
+                }
+                
+                
+                
+                //set OUTPUT
+                char toutstring[100];
+                sprintf(toutstring,"-p%it%is%i-",ppp,ttt,sss);
+                openout(toutstring);
+                //printf("------------- FILES OPENED\n");
+                
+                istjob=1;
+                
+                TurboRun((double)indt->value());
+                
+                //save state
+                //head
+                fprintf(outputSTATE,"%i\n",nodesnumber);
+                fprintf(outputSTATE,"%i\n",totrun);
+                
+                // CURRENT STATE
+                
+                print_matrix(&state, outputSTATE);
+                
+                
+                istjob=0;
+                
+                closeout();
+                
+                printf("------------- turbo run #%i done. \n", ccc);
+                
+                
+                
+                
+            
+                
+            }
+            
+        }
+        
+    }
+    
+    
+   
+}
+
+
+
+void gotjobcb(Fl_Widget *, void *) {
+    
+    
+    if(isdissipating==0){tjinsstep->value(1);}
+    
+    if(abs( (int)tjinpfrom->value() - (int)tjinpto->value()  )<  (int)tjinpstep->value()){
+        tjinpstep->value(abs( (int)tjinpfrom->value() - (int)tjinpto->value())+1);
+    }
+    
+    if(abs( (int)tjintfrom->value() - (int)tjintto->value()  )< (int)tjintstep->value()){
+        tjintstep->value(abs( (int)tjintfrom->value() - (int)tjintto->value())+1);
+    }
+    
+    if(fabs( (float)tjinsfrom->value() - (float)tjinsto->value()  )< (int)tjinsstep->value()){
+        tjinsstep->value( floor(fabs( (float)tjinsfrom->value() - (float)tjinsto->value()))+1);
+    }
+    
+    if((int)tjinpfrom->value() == (int)tjinpto->value() ) {tjinpstep->value(1);}
+    if((int)tjintfrom->value() == (int)tjintto->value() ) {tjintstep->value(1);}
+    if((float)tjinsfrom->value() == (float)tjinsto->value() ) {tjinsstep->value(1);}
+    
+    
+    logDebug("---  Turbo JOB  Started\n");
+    printf(" PARAMETERS: \n");
+    printf("PARTICLES        from=%i   to=%i  step=%i \n", (int)tjinpfrom->value(), (int)tjinpto->value(), (int)tjinpstep->value());
+    printf("THRESHOLD        from=%i   to=%i  step=%i \n", (int)tjintfrom->value(), (int)tjintto->value(), (int)tjintstep->value());
+    printf("SOURCE RATE      from=%f   to=%f  step=%i \n", (float)tjinsfrom->value(), (float)tjinsto->value(), (int)tjinsstep->value());
+    printf("TIME             %i \n",(int)tjintime->value());
+    printf("CONTEMP. RUNS    %i \n\n",(int)tjinrun->value());
+    
+    printf("  Total number of simulations: %i\n", (int)tjinpstep->value() * (int)tjintstep->value() * (int)tjinsstep->value());
+    
+    
+    dialtjob->hide();
+    
+    gotjob();
+    
+    printf("\n\n\n");
+    logDebug("-------------------- Turbo JOB Completed. ------------------\n\n\n");
+    
+}
 
 
 //----------------------------------------CHANGE LAYOUT--------------------------------------------------------
@@ -769,7 +1166,7 @@ void newrandcb(Fl_Widget *, void *) {
 //--------------------------------------------
 void newcluscb(Fl_Widget *, void *) {
     DialogueNewClus();
-
+    
 }
 
 
@@ -859,6 +1256,9 @@ void DialogueNewLat(void) {
     widgh=BUTTON_H1;
     dissipatelatcheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Dissipate");
     ypos=ypos+widgh;
+    
+    ransourcelatcheck = new Fl_Check_Button(xpos+10, ypos, DIAL_W-40, widgh, "Rand.Sources");
+    ypos=ypos+widgh;
     ypos=ypos+20;
     
     widgh=20;
@@ -869,7 +1269,7 @@ void DialogueNewLat(void) {
     disslat->maximum(1);
     disslat->value(0.1);
     ypos=ypos+widgh;
-
+    
     ypos=ypos+20;
     dnlat = new Fl_Value_Input(xpos,ypos,DIAL_W-40,widgh, "Source Node:");
     dnlat->align(FL_ALIGN_TOP_LEFT);
@@ -879,7 +1279,7 @@ void DialogueNewLat(void) {
     dnlat->value(0);
     ypos=ypos+widgh;
     
-
+    
     ypos=ypos+20;
     widgh=BUTTON_H1;
     diamlatcheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Calc. Diameter (Dijkstra)");
@@ -1013,7 +1413,7 @@ void generatelatticecb(Fl_Widget *, void *) {
         
         igraph_matrix_init(&adtemp,0,0);
         igraph_matrix_update(&adtemp,&admatrix);
-    
+        
         int nnn;
         nnn=nodesnumber;
         if((int)dissipatelatcheck->value()==1){
@@ -1076,6 +1476,7 @@ void generatelatticecb(Fl_Widget *, void *) {
     
     havepath=0;
     
+    israndomsources=(int)ransourcelatcheck->value();
     
     clear();
     
@@ -1138,6 +1539,9 @@ void DialogueNewRand(void) {
     ypos=ypos+20;
     widgh=BUTTON_H1;
     dissipaterancheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Dissipate");
+    ypos=ypos+widgh;
+    
+    ransourcerancheck = new Fl_Check_Button(xpos+10, ypos, DIAL_W-40, widgh, "Rand.Sources");
     ypos=ypos+widgh;
     ypos=ypos+20;
     
@@ -1288,10 +1692,11 @@ void generaterandom1cb(Fl_Widget *, void *) {
             printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
         }
         else{diameter=0;}
-
+        
     }
     graphisloaded=1;
     havepath=0;
+    israndomsources=(int)ransourcerancheck->value();
     clear();
 }
 
@@ -1395,6 +1800,9 @@ void DialogueNewClus(void) {
     widgh=BUTTON_H1;
     dissipatecluscheck = new Fl_Check_Button(xpos, ypos, DIAL_W-40, widgh, "Dissipate");
     ypos=ypos+widgh;
+    
+    ransourcecluscheck = new Fl_Check_Button(xpos+10, ypos, DIAL_W-40, widgh, "Rand.Sources");
+    ypos=ypos+widgh;
     ypos=ypos+20;
     
     widgh=20;
@@ -1497,7 +1905,7 @@ void generateclustsymcb(Fl_Widget *, void *) {
         newgraph=1;
         
         dial3->hide();    dialnewnet->hide();
-      
+        
         
         roundRAN->setonly();
         roundLOAD->deactivate();
@@ -1535,7 +1943,7 @@ void generateclustsymcb(Fl_Widget *, void *) {
             
             for(int i=0;i<nnn;++i){
                 for (int j=0; j<nnn; ++j) {
-                   MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
+                    MATRIX(adtemp,i,j)=(1./(MATRIX(adtemp,i,j)));
                 }}
             
             igraph_weighted_adjacency(&tempgraph, &adtemp,IGRAPH_ADJ_DIRECTED, "w",0);
@@ -1560,12 +1968,14 @@ void generateclustsymcb(Fl_Widget *, void *) {
             printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
         }
         else{diameter=0;}
-
+        
         
     }
     graphisloaded=1;
     isclustered=1;
     havepath=0;
+    
+    israndomsources=(int)ransourcecluscheck->value();
     
     clear();
     
@@ -1731,6 +2141,11 @@ void DialogueNewClusGer2(void) {
     dissipateclus2lcheck = new Fl_Check_Button(xpos,ypos,widgw,widgh, "Dissipate");
     ypos=ypos+widgh;
     
+    widgh=BUTTON_H1;
+    ransourceclus2lcheck = new Fl_Check_Button(xpos+10, ypos, DIAL_W-40, widgh, "Rand.Sources");
+    ypos=ypos+widgh;
+    ypos=ypos+20;
+    
     widgh=20;
     ypos=ypos+10;
     dissclus2l= new Fl_Value_Input(xpos,ypos,widgw,widgh, "Dissipation rate:");
@@ -1796,20 +2211,20 @@ void generateclusger2cb(Fl_Widget *, void *) {
     
     graphisloaded=0;
     
-   /*  generateclusger2(2//int clusnumber1
-                          ,2//int clusnumber2
-                          ,4//int clusdim1
-                          ,1//int cnodes1
-                          ,1//int cnodes2
-                          ,1.0//double interconn
-                          ,1.0//double intraconn1
-                          ,1.0// double intraconn2
-                          ,5.// double wall1
-                          ,5.// double wall2
-                          ,0// int dissipate
-                          ,0// double dissipation
-                          );
-*/
+    /*  generateclusger2(2//int clusnumber1
+     ,2//int clusnumber2
+     ,4//int clusdim1
+     ,1//int cnodes1
+     ,1//int cnodes2
+     ,1.0//double interconn
+     ,1.0//double intraconn1
+     ,1.0// double intraconn2
+     ,5.// double wall1
+     ,5.// double wall2
+     ,0// int dissipate
+     ,0// double dissipation
+     );
+     */
     
     
     generateclusger2((int)inclus2l1->value() //int clusnumber1
@@ -1927,7 +2342,7 @@ void generateclusger2cb(Fl_Widget *, void *) {
             printf(" \n \n ---- DIAMETER ---- %f   \n \n",diameter);
         }
         else{diameter=0;}
-
+        
         
     }
     graphisloaded=1;
@@ -1935,7 +2350,9 @@ void generateclusger2cb(Fl_Widget *, void *) {
     havepath=0;
     
     clear();
-
+    
+    israndomsources=(int)ransourceclus2lcheck->value();
+    
     
     printf("\n\n\n\n");
     //print_matrix_ur(&admatrix,stdout);
@@ -2015,24 +2432,25 @@ void piicb(Fl_Widget *, void *) {
 
 //--------------------------------------------
 void prevcb(Fl_Widget *, void *) {
-   
+    
     
     if((int)roundTAS->value()==1)InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),(int)in3->value());
     else if((int)roundRAN->value()==1)InitialStateRAN((int)in6->value(), (int)in3->value());
     else if((int)roundSTAT->value()==1) InitialStateSTAT((int)in3->value());
     else if((int)roundLOAD->value()==1) InitialStateLOAD();
-   
+    
     
 }
 
 
-void openout(){
+void openout(char *string){
     
     char filename[100];
+   
     
     if(haveout==0) {
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),0);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,0);
         
         if( (output0=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2043,7 +2461,7 @@ void openout(){
             return;
         }
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),1);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,1);
         
         if( (output1=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2054,7 +2472,7 @@ void openout(){
             return;
         }
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),2);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,2);
         
         if( (output2=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2065,7 +2483,7 @@ void openout(){
             return;
         }
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),3);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,3);
         
         if( (output3=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2077,7 +2495,7 @@ void openout(){
         }
         
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),5);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,5);
         
         if( (output5=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2088,7 +2506,7 @@ void openout(){
             return;
         }
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),6);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,6);
         
         if( (output6=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2099,7 +2517,7 @@ void openout(){
             return;
         }
         
-        sprintf(filename,"%s%i.txt",setoutname->value(),7);
+        sprintf(filename,"%s%s%i.txt",setoutname->value(),string,7);
         
         if( (output7=fopen(filename,"w")) ==NULL) {
             logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
@@ -2109,6 +2527,44 @@ void openout(){
             runbutton->value(0);
             return;
         }
+        
+        
+        sprintf(filename,"%s%sSTATE.txt",setoutname->value(),string);
+        
+        if( (outputSTATE=fopen(filename,"w")) ==NULL) {
+            logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
+            sprintf(errorstring,"ERROR\nOPENING\nOUTPUT\nFILE");
+            error=1;
+            rewrite=1;
+            runbutton->value(0);
+            return;
+        }
+        
+        
+        
+        
+        sprintf(filename,"%s%sDET.txt",setoutname->value(),string);
+        
+        if( (outputDETAILS=fopen(filename,"w")) ==NULL) {
+            logDebug("\nERROR: CANNOT OPEN OUTPUT FILE '%s'\n",filename);
+            sprintf(errorstring,"ERROR\nOPENING\nOUTPUT\nFILE");
+            error=1;
+            rewrite=1;
+            runbutton->value(0);
+            return;
+        }
+        
+        fprintf(outputDETAILS,"PARTICLES %i\n",particles);
+        fprintf(outputDETAILS,"TOTRUN %i\n",totrun);
+        fprintf(outputDETAILS,"TIME %i\n",maxtime);
+        fprintf(outputDETAILS,"SOURCE RATE %i\n",vincolo);
+        
+        fprintf(outputDETAILS,"NODES %i\n",nodesnumber);
+        
+        
+        fclose(outputDETAILS);
+        
+        
         
         haveout=1;
     }
@@ -2126,6 +2582,7 @@ void closeout(){
         fclose(output5);
         fclose(output6);
         fclose(output7);
+        fclose(outputSTATE);
     }
     
     haveout=0;
@@ -2149,7 +2606,7 @@ void run(){
             tactdisp=(int)intactdisplay->value();
             
             deltat=(double)indt->value();
-           
+            
             if ( (int)roundTAS->value()==1 ){
                 logDebug("\nTAS initial state.\n");
                 InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),(int)in3->value());
@@ -2192,7 +2649,9 @@ void run(){
             
             
             //set OUTPUT
-            openout();
+            char toutstring[100];
+            sprintf(toutstring,"-");
+            openout(toutstring);
             
             cleared=0;}
         
@@ -2213,6 +2672,7 @@ void run(){
         settingsgroup->deactivate();
         clearbutton->deactivate();
         turbobutton->deactivate();
+        tjobbutton->deactivate();
     }
     else {
         runningcontrol=0;
@@ -2267,6 +2727,7 @@ void clear(){
     
     settingsgroup->activate();
     turbobutton->activate();
+    tjobbutton->activate();
     
     runbutton->value(0);
     runningcontrol=runbutton->value();
@@ -2283,9 +2744,9 @@ void clear(){
     
     igraph_vector_clear(&tactvect);
     for(int i=0;i<MAXTACTREG;++i){tactcoord[i]=0;}
-
     
- 
+    
+    
     if ( (int)roundTAS->value()==1 ){
         InitialStateTAS((int)in5->value(),(int)roundTASRAN->value(),(int)in3->value());
         haveloadedstate=0;
@@ -2405,7 +2866,7 @@ void loadcb(Fl_Widget *, void *) {
         
         sprintf(path,"%s",loadchooser->value());
         havepath=1; rewrite=1;
-
+        
         igraph_matrix_init(&loss, 0, 0);
         
         igraph_matrix_init(&dissipation,0,0);
@@ -2427,10 +2888,10 @@ void loadcb(Fl_Widget *, void *) {
         
         bsave->activate();
         
-    
+        
         roundTAS->setonly();
         roundLOAD->deactivate();
-    
+        
         beginner=0; particles=100;
         
         
@@ -2561,7 +3022,7 @@ void savestateascb(Fl_Widget *, void *) {
     
     savestatechooser->directory("./");
     savestatechooser->filter(NULL);
-   savestatechooser->preview(0);
+    savestatechooser->preview(0);
     savestatechooser->label("Save STATE As");
     
     savestatechooser->show();
@@ -2579,7 +3040,7 @@ void savestateascb(Fl_Widget *, void *) {
     
     //save graph;
     savestate(filepath);
- 
+    
     
 }
 
@@ -2598,6 +3059,12 @@ void turbocb(Fl_Widget *, void *){
     
 }
 
+void tjobcb(Fl_Widget *, void *){
+    
+    printdatabutton->value(1);
+    TJobDial();
+    
+}
 
 
 void drawhistocb(Fl_Widget *, void *) {
@@ -2652,7 +3119,7 @@ void cstopcb(Fl_Widget *, void *){
 }
 
 void cstop(){
-
+    
     int ntry=NTRYSTOP;
     
     double resmean, resvar, resvarvar;
@@ -2665,9 +3132,9 @@ void cstop(){
     //build the ntrys steady states:
     for (int i=0; i<ntry; ++i) {
         
-    igraph_matrix_t trystate;
-    igraph_matrix_init(&trystate,nodesnumber,totrun);
-    igraph_matrix_null(&trystate);
+        igraph_matrix_t trystate;
+        igraph_matrix_init(&trystate,nodesnumber,totrun);
+        igraph_matrix_null(&trystate);
         
         //simulate the state
         for(int r=0;r<totrun;++r ){
@@ -2709,7 +3176,7 @@ void cstop(){
         //get from histogram
         VECTOR(trymean)[i]=tryhist.mean;
         VECTOR(tryvar)[i]=tryhist.variance;
-               
+        
         tryhist.Clear();
         //delete &tryhist;
         
@@ -2727,7 +3194,7 @@ void cstop(){
         resvarvar= resvarvar + (VECTOR(tryvar)[i]-resvar)*(VECTOR(tryvar)[i]-resvar);
     }
     resvarvar=sqrt(resvarvar)/ntry;
-
+    
     igraph_vector_destroy(&trymean);
     igraph_vector_destroy(&tryvar);
     
@@ -2737,7 +3204,7 @@ void cstop(){
     invarerstop->value((3*resvarvar)/2);
     
     
-
+    
 }
 
 
@@ -2774,7 +3241,7 @@ void DataWindow(void) {
     w_est= DATAWINWIDTH;   h_est= 200;
     
     datawindow=   new Fl_Window(w_est,h_est,"LAURA - Data Window");
-
+    
     xpos=BORDER1;
     ypos=BORDER1;
     
@@ -2804,7 +3271,7 @@ void DataWindow(void) {
     
     
     widgh=BUTTON_H1;
-
+    
     ypos=ypos+15;
     widgw=BUTTON_L-10;
     meanbuff = new Fl_Text_Buffer();
@@ -2897,7 +3364,7 @@ void DataWindow(void) {
         histogroup->deactivate();
     }
     
-
+    
     
     ypos=ypos+20;
     
@@ -2911,25 +3378,25 @@ void DataWindow(void) {
     
     xpos=BUTTON_L+20+2*BORDER1;
     ypos=BORDER1;
-
+    
     widgh=BUTTON_H1;
     Fl_Box *myactbox = new Fl_Box(xpos,ypos,widgw,widgh, " Activation ");
     myactbox->labelsize(16);
     myactbox->labelfont(FL_BOLD);
     myactbox->box(FL_ROUNDED_BOX);
-
     
-   
+    
+    
     /*
      xpos=xpos+widgw+85;
      widgw=50;
-    inwindowrunningmean = new Fl_Value_Input(xpos,ypos,widgw,widgh, "RM Window:");
-    inwindowrunningmean->step(1);
-    inwindowrunningmean->minimum(1);
-    inwindowrunningmean->maximum(100000000000);
-    inwindowrunningmean->value(windowrm);
-    xpos=xpos+90;
-    */
+     inwindowrunningmean = new Fl_Value_Input(xpos,ypos,widgw,widgh, "RM Window:");
+     inwindowrunningmean->step(1);
+     inwindowrunningmean->minimum(1);
+     inwindowrunningmean->maximum(100000000000);
+     inwindowrunningmean->value(windowrm);
+     xpos=xpos+90;
+     */
     
     xpos=xpos+widgw+130;
     widgw=50;
@@ -2964,7 +3431,7 @@ void DataWindow(void) {
     tactscene =  new TactFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
-
+    
     
     // fluctuation histograms
     
@@ -2999,29 +3466,29 @@ void DataWindow(void) {
     
     ypos=ypos+10;
     
-
+    
     widgh=BUTTON_L; widgw=BUTTON_L;
     hfluctscene =  new HFluctFrame(xpos,ypos,widgw,widgh, 0);
     ypos=ypos+widgh;
     
     
     /*xpos=xpos-BUTTON_L-10;
-    xpos=xpos+10;
-    ypos=ypos+10; xpos=xpos+BUTTON_L/2;
-    widgh=BUTTON_H1;  widgw=BUTTON_L;
-    drawhistobutton = new Fl_Check_Button(xpos,ypos,widgh,widgh," --------- Draw --------- ");
-    drawhistobutton->value(0);
-    drawhistobutton->activate();
-    drawhisto=0;
-    ypos=ypos+widgh;
-   */
+     xpos=xpos+10;
+     ypos=ypos+10; xpos=xpos+BUTTON_L/2;
+     widgh=BUTTON_H1;  widgw=BUTTON_L;
+     drawhistobutton = new Fl_Check_Button(xpos,ypos,widgh,widgh," --------- Draw --------- ");
+     drawhistobutton->value(0);
+     drawhistobutton->activate();
+     drawhisto=0;
+     ypos=ypos+widgh;
+     */
     
     /*
      widgh=BUTTON_H1;
-    ypos=ypos+10;
-    Fl_Button *closeit = new Fl_Button(xpos, ypos, widgw, widgh, "CLOSE");
-    ypos=ypos+widgh;
-    */
+     ypos=ypos+10;
+     Fl_Button *closeit = new Fl_Button(xpos, ypos, widgw, widgh, "CLOSE");
+     ypos=ypos+widgh;
+     */
     
     
     //closeit->callback(exitdatacb,0);
@@ -3046,7 +3513,7 @@ void DataWindow(void) {
     datawindow->show();
     
     datascene->show();
-
+    
     
 }
 
@@ -3069,10 +3536,10 @@ void datacb(Fl_Widget *, void *){
 
 //--------------------------------------------
 void exitdatacb(Fl_Widget *, void *) {
-
+    
     datawindow->hide();
     viewingdata=0;
-   
+    
 }
 
 
@@ -3136,7 +3603,7 @@ void CreateMyWindow(void) {
     settingsgroup->labelfont(FL_BOLD);
     settingsgroup->box(FL_BORDER_BOX);
     settingsgroup->color(FL_LIGHT2);
-
+    
     widgh=20;
     ypos=ypos+15;
     in1 = new Fl_Value_Input(xpos,ypos,BUTTON_WL,widgh, "Particles:");
@@ -3265,7 +3732,7 @@ void CreateMyWindow(void) {
     roundLOAD->type(FL_RADIO_BUTTON);
     roundLOAD->deactivate();
     ypos=ypos+widgh;
-
+    
     
     
     widgh=20;
@@ -3285,7 +3752,7 @@ void CreateMyWindow(void) {
     setoutname = new Fl_Input(xpos,ypos,BUTTON_WL,widgh, "Output file:");
     setoutname->align(FL_ALIGN_TOP_LEFT);
     setoutname->labelfont(FL_BOLD);
-    setoutname->value("myout");
+    setoutname->value("data/myout");
     ypos=ypos+widgh;
     
     settingsgroup->end();
@@ -3340,7 +3807,7 @@ void CreateMyWindow(void) {
     ypos=ypos+widgh;
     
     
-
+    
     
     widgh=BUTTON_H;
     ypos=ypos+5;
@@ -3411,13 +3878,19 @@ void CreateMyWindow(void) {
     
     
     
-
+    
     widgh=BUTTON_H;
     widgw=BUTTON_WL;
-    ypos=h_est-widgh-10;
+    ypos=h_est-(widgh+20)-2*10;
     turbobutton  = new Fl_Button(xpos, ypos, widgw, widgh, "TURBO");
     turbobutton->labelfont(FL_BOLD);
     turbobutton->labelcolor(FL_DARK_RED);
+    ypos=ypos+widgh;
+    
+    ypos=h_est-20-10;
+    tjobbutton  = new Fl_Button(xpos, ypos, widgw, 20, "T. JOB");
+    tjobbutton->labelfont(FL_BOLD);
+    tjobbutton->labelcolor(FL_DARK_RED);
     ypos=ypos+widgh;
     
     
@@ -3472,26 +3945,26 @@ void CreateMyWindow(void) {
     datadisp = new Fl_Text_Display(xpos,ypos, BUTTON_WR,widgh, "");
     datadisp->buffer(databuff);
     ypos=ypos+widgh;
-
+    
     
     widgh=BUTTON_H;
     
     ypos=ypos+20;
     bsetlayout = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Layout");
     ypos=ypos+widgh;
- 
+    
     
     ypos=ypos+20;
     widgh=BUTTON_H;
     bnewnet = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "New Network");
     ypos=ypos+widgh;
     
-
+    
     ypos=ypos+10;
     widgh=BUTTON_H1;
     bload = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Load Network");
     ypos=ypos+widgh;
-
+    
     
     widgh=BUTTON_H1;
     bsave = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Save Network");
@@ -3502,9 +3975,9 @@ void CreateMyWindow(void) {
     widgh=BUTTON_H1;
     bsaveas = new Fl_Button(xpos, ypos, BUTTON_WR, widgh, "Save Net. As");
     ypos=ypos+widgh;
-
-
-
+    
+    
+    
     
     
     
@@ -3606,8 +4079,9 @@ void CreateMyWindow(void) {
     prev->callback(prevcb,0);
     
     turbobutton->callback(turbocb,0);
+    tjobbutton->callback(tjobcb,0);
     
- 
+    
     bnewnet->callback(newnetcb,0);
     bload->callback(loadcb,0);
     bloadstate->callback(loadstatecb,0);

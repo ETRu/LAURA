@@ -117,6 +117,8 @@ FILE * output4;
 FILE * output5;
 FILE * output6;
 FILE * output7;
+FILE * outputDETAILS;
+FILE * outputSTATE;
 
 
      /*
@@ -151,7 +153,10 @@ int ispii;          //is pii (i.e., i have a p_ii=1/2*dt (prob of self loops)
 int havecstop;      //do i have a stop condition?
 int isrelaxed;      //has my system relaxed according to the stop condition?
 int isdissipating;  //do I have a dissipation node?
+int israndomsources; //do I use random sources?
 
+int isturbo;
+int istjob;
 
 int havepath;       //do I have a path for my job?
 int haveout;        //do I have a working output file?
@@ -676,7 +681,11 @@ int main(int argc, char **argv) {
     isrelaxed=0;
     havecstop=0;
     isdissipating=0;
+    israndomsources=0;
     viewingdata=0;
+    
+    isturbo=0;
+    istjob=0;
     
     igraph_vector_init(&tactvect,0);
     igraph_vector_init(&fluctvect,0);

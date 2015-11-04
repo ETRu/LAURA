@@ -91,14 +91,13 @@ void savestateascb(Fl_Widget *, void *);
 void run();
 void runcontrolcb(Fl_Widget *, void *);
 void runstepecb(Fl_Widget *, void *);
-void goturbocb(Fl_Widget *, void *);
 
 //clears
 void clearcb(Fl_Widget *, void *);
 void clear();
 
 //output
-void openout();
+void openout(char *string);
 void closeout();
 
 //drawing
@@ -119,10 +118,20 @@ void changelayoutcb(Fl_Widget *, void *);
 //TURBO DIAL
 void TurboDial(void);
 void exitdialturbocb(Fl_Widget *, void *);
+void goturbocb(Fl_Widget *, void *);
 void goturborun();
+
+//TURBO JOB DIAL
+void TJobDial(void);
+void exitdialtjobcb(Fl_Widget *, void *);
+void gotjobcb(Fl_Widget *, void *);
+void gotjob();
 
 //turbo
 void turbocb(Fl_Widget *, void *);
+
+//turbo job
+void tjobcb(Fl_Widget *, void *);
 
 //calculate stop condition
 void cstopcb(Fl_Widget *, void *);

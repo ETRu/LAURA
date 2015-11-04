@@ -33,6 +33,10 @@ extern int havecstop;
 extern int haveloadedstate;
 extern int usesteady;
 extern int isdissipating;
+extern int israndomsources;
+
+extern int isturbo;
+extern int istjob;
 
 extern int lparticles;
 extern int ltotrun;
@@ -53,6 +57,8 @@ extern FILE * output4;
 extern FILE * output5;
 extern FILE * output6;
 extern FILE * output7;
+extern FILE * outputDETAILS;
+extern FILE * outputSTATE;
 
 extern LAURA_Histogram_1D histdist;
 extern double dm, dv;
@@ -328,7 +334,8 @@ void Evolution(double dt){
     
     double tempreal, dontmove;
     
-    
+    igraph_vector_t sourcenodes;
+    int nsn;
     
     if (ticks!=0){
         nodesnumber=igraph_matrix_nrow(&admatrix);
@@ -347,6 +354,29 @@ void Evolution(double dt){
                     
                     igraph_neighbors(&sgraph, &neis, j, IGRAPH_ALL);
                     
+                    if (isdissipating==1 && j==(nodesnumber-1)) {
+                        
+                        if(israndomsources==0) {
+                            nsn=1;
+                        }
+                        else {
+                            nsn=(vincolo/threshold);
+                            if(nsn==0){nsn=1;}
+                        }
+                        
+                        igraph_vector_init(&sourcenodes,nsn);
+                        
+                        if(israndomsources==0){
+                            VECTOR(sourcenodes)[0]=sourcenode;
+                        }
+                        else {
+                            for (int jack=0; jack<nsn; ++jack) {
+                                VECTOR(sourcenodes)[jack]= genrand_int31()%(nodesnumber-1);
+                            }
+                            
+                        }
+                    }
+                    
                     
                     for(i=0;i<pinstate;++i){
                         
@@ -359,34 +389,41 @@ void Evolution(double dt){
                             //3 cases:     i<realrate , realrate < i < realrate+i, i> realrate.
                             if(isdissipating==1 && j==(nodesnumber-1))
                             {
-                                
+                                int stemp;
+                               
                                 if(i<=realrate){
-                                    //add to state vector'
-                                ++MATRIX(loss,j,run); ++MATRIX(dissipation,j,run);
-                                ++VECTOR(gain)[sourcenode];
+                                //add to state vector'
+                                ++MATRIX(loss,j,run);++MATRIX(dissipation,j,run);
+                                    stemp=genrand_int31()%nsn;
+                                    stemp=VECTOR(sourcenodes)[stemp];
+                                ++VECTOR(gain)[stemp];
                                 //get eids for flux
-                                igraph_get_eid(&sgraph, &eid,j,sourcenode,IGRAPH_UNDIRECTED,1);
+                                igraph_get_eid(&sgraph, &eid,j,stemp,IGRAPH_UNDIRECTED,1);
                                 //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
                                 //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
-                                MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-sourcenode) / abs(j-sourcenode) );
+                                MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-stemp) / abs(j-stemp) );
                                 //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
                                 }
                            
                                 else if(i<=(1+realrate)){
-                                if(genrand_real1()<(vincolo-realrate)){
-                                    
-                                    //add to state vector'
-                                    ++MATRIX(loss,j,run); ++MATRIX(dissipation,j,run);
-                                    ++VECTOR(gain)[sourcenode];
-                                    //get eids for flux
-                                    igraph_get_eid(&sgraph, &eid,j,sourcenode,IGRAPH_UNDIRECTED,1);
-                                    //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
-                                    //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
-                                    MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-sourcenode) / abs(j-sourcenode) );
-                                    //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
-                                    
+                                    if(genrand_real1()<(vincolo-realrate)){
+                                        //add to state vector'
+                                        ++MATRIX(loss,j,run);++MATRIX(dissipation,j,run);
+                                        stemp=genrand_int31()%nsn;
+                                        stemp=VECTOR(sourcenodes)[stemp];
+                                        ++VECTOR(gain)[stemp];
+                                        //get eids for flux
+                                        igraph_get_eid(&sgraph, &eid,j,stemp,IGRAPH_UNDIRECTED,1);
+                                        //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
+                                        //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
+                                        MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-stemp) / abs(j-stemp) );
+                                        //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
+                                    }
                                 }
-                                }
+                                
+                               
+                                
+                                
                             }
                             
                             //°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°   WHEEEEEEEEEEEEL °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -474,6 +511,8 @@ void Evolution(double dt){
                         }
                         
                     }
+                    
+                    if (isdissipating==1 && j==(nodesnumber-1)) {igraph_vector_destroy(&sourcenodes);}
                     
                 }
                 
@@ -614,6 +653,9 @@ void TurboRun(double dt){
     
     int realrate;
     realrate=floor(vincolo);
+    
+    igraph_vector_t sourcenodes;
+    int nsn;
     
     nodesnumber=igraph_matrix_nrow(&admatrix);
     
@@ -842,9 +884,10 @@ void TurboRun(double dt){
                 
                 shooted=shooted/totrun;
                 
+                if(istjob==0){
                 fprintf(output1,"%f ",dens);
                 fprintf(output2,"%f ",err);
-                fprintf(output5,"%f ",shooted);
+                fprintf(output5,"%f ",shooted);}
                 
             }
             
@@ -948,7 +991,7 @@ void TurboRun(double dt){
             
             
             //if i have BRIDGES ("clustered" graph), I print the traffic on the BRIDGES, using "output3" file
-            if(isclustered==1){
+            if(isclustered==1 && istjob==0){
                 
                 //for each bridge
                 fprintf(output3,"%i ",ticks);
@@ -998,7 +1041,7 @@ void TurboRun(double dt){
         //if i HAVENT STEADY STATE
         else {
             
-            //fprintf(output0,"%i ", time);
+            if(istjob==0){  //fprintf(output0,"%i ", time);
             fprintf(output1,"%i ", time);
             fprintf(output5,"%i ", time);
             
@@ -1022,6 +1065,30 @@ void TurboRun(double dt){
             //fprintf(output0,"\n");
             fprintf(output1,"\n");
             fprintf(output5,"\n");
+            }
+            
+            
+            //if i have BRIDGES ("clustered" graph), I print the traffic on the BRIDGES, using "output3" file
+            if(isclustered==1 && istjob==0){
+                
+                //for each bridge
+                fprintf(output3,"%i ",ticks);
+                for(int nbri=0; nbri<igraph_matrix_ncol(&bridgeslinks); ++nbri){
+                    for(int i=0; i<igraph_matrix_nrow(&bridgeslinks);++i){
+                        double tfl=0;
+                        for(int j=0; j<totrun; ++j){
+                            int beid;
+                            beid=(int)MATRIX(bridgeslinks,i,nbri);
+                            tfl=tfl+MATRIX(flux,beid,j);
+                        }
+                        fprintf(output3,"%f ",tfl);
+                    }
+                    
+                    
+                }
+                fprintf(output3,"\n");
+            }
+            
             
         }
         

@@ -2483,7 +2483,7 @@ void savestate(char *mypath) {
     fclose(outstream);
     
     
-    havepath=1;
+    havepath=0;
     
     error=0;
     
