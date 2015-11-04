@@ -684,6 +684,29 @@ void TurboRun(double dt){
                     
                     igraph_neighbors(&sgraph, &neis, j, IGRAPH_ALL);
                     
+                    if (isdissipating==1 && j==(nodesnumber-1)) {
+                        
+                        if(israndomsources==0) {
+                            nsn=1;
+                        }
+                        else {
+                            nsn=(vincolo/threshold);
+                            if(nsn==0){nsn=1;}
+                        }
+                        
+                        igraph_vector_init(&sourcenodes,nsn);
+                        
+                        if(israndomsources==0){
+                            VECTOR(sourcenodes)[0]=sourcenode;
+                        }
+                        else {
+                            for (int jack=0; jack<nsn; ++jack) {
+                                VECTOR(sourcenodes)[jack]= genrand_int31()%(nodesnumber-1);
+                            }
+                            
+                        }
+                    }
+                    
                     for(i=0;i<pinstate;++i){
                         
                         if(ispii==1)dontmove=genrand_real1();
@@ -691,40 +714,48 @@ void TurboRun(double dt){
                         
                         if(dontmove<1-(0.5*dt)){
                             
-                            
                             /****  DISSIPATIVE CASE - PUMP NODE *****/
                             //3 cases:     i<realrate , realrate < i < realrate+i, i> realrate.
                             if(isdissipating==1 && j==(nodesnumber-1))
                             {
+                                int stemp;
                                 
                                 if(i<=realrate){
                                     //add to state vector'
-                                    ++MATRIX(loss,j,run); ++MATRIX(dissipation,j,run);
-                                    ++VECTOR(gain)[sourcenode];
+                                    ++MATRIX(loss,j,run);++MATRIX(dissipation,j,run);
+                                    stemp=genrand_int31()%nsn;
+                                    stemp=VECTOR(sourcenodes)[stemp];
+                                    ++VECTOR(gain)[stemp];
                                     //get eids for flux
-                                    igraph_get_eid(&sgraph, &eid,j,sourcenode,IGRAPH_UNDIRECTED,1);
+                                    igraph_get_eid(&sgraph, &eid,j,stemp,IGRAPH_UNDIRECTED,1);
                                     //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
                                     //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
-                                    MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-sourcenode) / abs(j-sourcenode) );
+                                    MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-stemp) / abs(j-stemp) );
                                     //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
                                 }
                                 
                                 else if(i<=(1+realrate)){
                                     if(genrand_real1()<(vincolo-realrate)){
-                                        
                                         //add to state vector'
-                                        ++MATRIX(loss,j,run); ++MATRIX(dissipation,j,run);
-                                        ++VECTOR(gain)[sourcenode];
+                                        ++MATRIX(loss,j,run);++MATRIX(dissipation,j,run);
+                                        stemp=genrand_int31()%nsn;
+                                        stemp=VECTOR(sourcenodes)[stemp];
+                                        ++VECTOR(gain)[stemp];
                                         //get eids for flux
-                                        igraph_get_eid(&sgraph, &eid,j,sourcenode,IGRAPH_UNDIRECTED,1);
+                                        igraph_get_eid(&sgraph, &eid,j,stemp,IGRAPH_UNDIRECTED,1);
                                         //printf("\n ederror:%i, %i->%i (%i) || ", ederror,j,pippo,eid);
                                         //printf("%f = %f + ((%i-%i)/abs(%i-%i))   ",MATRIX(flux,eid,run),MATRIX(flux,eid,run),j,pippo,j,pippo);
-                                        MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-sourcenode) / abs(j-sourcenode) );
+                                        MATRIX(flux,eid,run) = MATRIX(flux,eid,run) + (double)( (j-stemp) / abs(j-stemp) );
                                         //printf(" [%i]        %f    ", (j-pippo) / abs(j-pippo),MATRIX(flux,eid,run));
-                                        
                                     }
                                 }
+                                
+                                
+                                
+                                
                             }
+                            
+                            
                             
                             //°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°   WHEEEEEEEEEEEEL °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
                             
@@ -809,6 +840,9 @@ void TurboRun(double dt){
                         }
                         
                     }
+                    
+                    if (isdissipating==1 && j==(nodesnumber-1)) {igraph_vector_destroy(&sourcenodes);}
+                    
                     
                 }
                 
