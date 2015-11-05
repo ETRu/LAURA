@@ -155,6 +155,8 @@ int isrelaxed;      //has my system relaxed according to the stop condition?
 int isdissipating;  //do I have a dissipation node?
 int israndomsources; //do I use random sources?
 
+int nsn; // # source nodes;
+
 int isturbo;
 int istjob;
 
@@ -223,7 +225,7 @@ int latticeside;
 
 
 //presets
-int vincolo=1;
+float vincolo=1;
 int threshold=1;
 int particles=10000;
 int beginner;

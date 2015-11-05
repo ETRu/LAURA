@@ -18,7 +18,7 @@ extern igraph_matrix_t dissipation;
 extern int latticedim;
 extern int latticeside;
 
-extern int vincolo;
+extern float vincolo;
 extern int threshold;
 extern int particles;
 extern int beginner;
@@ -74,6 +74,7 @@ extern int isrelaxed;
 extern int haveloadedstate;
 extern int isdissipating;
 extern int israndomsources;
+extern int nsn;
 
 extern int istjob;
 
@@ -736,18 +737,20 @@ void gotjob(){
         
             threshold = mint + ttt*det;
             
-            
             for(int sss=0; sss<stepss; ++sss)
                 
             {
             
                 vincolo = mins + sss*des;
                 
+                //printf(" \n\n  MINS %f  SSS %i  DES %s VINCOLO     %f  \n\n",mins, sss, des, vincolo);
+               
                 ++ccc;
                 printf("\n");
-                logDebug(" [%i/%i] particles = %i | threshold = %i | vincolo = %f", ccc , totjob , particles, threshold, vincolo);
+                logDebug("[%i/%i] \n", ccc , totjob ); fflush(stdout);
+                logDebug(" particles = %i | threshold = %i | vincolo = %f \n",  particles, threshold, vincolo); fflush(stdout);
                 
-                clear();
+                //clear();
                 
                 //set parameters
                 
@@ -830,6 +833,9 @@ void gotjobcb(Fl_Widget *, void *) {
     
     if(isdissipating==0){tjinsstep->value(1);}
     
+    if((float)tjinsfrom->value() < 0.0001) {tjinsfrom->value(0.001);}
+    if((float)tjinsto->value() < 0.0001) {tjinsto->value(0.001);}
+    
     if(abs( (int)tjinpfrom->value() - (int)tjinpto->value()  )<  (int)tjinpstep->value()){
         tjinpstep->value(abs( (int)tjinpfrom->value() - (int)tjinpto->value())+1);
     }
@@ -838,9 +844,7 @@ void gotjobcb(Fl_Widget *, void *) {
         tjintstep->value(abs( (int)tjintfrom->value() - (int)tjintto->value())+1);
     }
     
-    if(fabs( (float)tjinsfrom->value() - (float)tjinsto->value()  )< (int)tjinsstep->value()){
-        tjinsstep->value( floor(fabs( (float)tjinsfrom->value() - (float)tjinsto->value()))+1);
-    }
+    
     
     if((int)tjinpfrom->value() == (int)tjinpto->value() ) {tjinpstep->value(1);}
     if((int)tjintfrom->value() == (int)tjintto->value() ) {tjintstep->value(1);}
@@ -2554,15 +2558,7 @@ void openout(char *string){
             return;
         }
         
-        fprintf(outputDETAILS,"PARTICLES %i\n",particles);
-        fprintf(outputDETAILS,"TOTRUN %i\n",totrun);
-        fprintf(outputDETAILS,"TIME %i\n",maxtime);
-        fprintf(outputDETAILS,"SOURCE RATE %i\n",vincolo);
-        
-        fprintf(outputDETAILS,"NODES %i\n",nodesnumber);
-        
-        
-        fclose(outputDETAILS);
+
         
         
         
@@ -2583,6 +2579,40 @@ void closeout(){
         fclose(output6);
         fclose(output7);
         fclose(outputSTATE);
+        
+        
+        
+        /*____  PRINT DETAILS  ___*/
+        
+        fprintf(outputDETAILS,"PARTICLES %i\n",particles);
+        fprintf(outputDETAILS,"TOTRUN %i\n",totrun);
+        fprintf(outputDETAILS,"TIME %i\n",maxtime);
+        fprintf(outputDETAILS,"SOURCE RATE %f\n",vincolo);
+        
+        fprintf(outputDETAILS,"NODES %i\n",nodesnumber);
+        
+        if(isdissipating==1){
+            fprintf(outputDETAILS,"DISSIPATING :  %f (diss: %f )\n",MATRIX(admatrix,0,nodesnumber-1),
+                    (-1.)*MATRIX(admatrix,0,nodesnumber-1) / ( MATRIX(admatrix,0,nodesnumber-1) -1 ) );
+            
+            if(israndomsources==1){
+                fprintf(outputDETAILS,"RANDOM SOURCES ( %i )\n", nsn );
+            }
+            else {
+                fprintf(outputDETAILS,"ONE SOURCE ( %i )\n", sourcenode);
+            }
+            
+        }
+        else{
+            
+            fprintf(outputDETAILS,"NOT DISSIPATING\n");
+        }
+        
+        
+        /*____ END PRINT DETAILS - CLOSE DILE ___*/
+        
+        fclose(outputDETAILS);
+        
     }
     
     haveout=0;
@@ -2792,6 +2822,10 @@ void clear(){
     
     
 }
+
+
+
+
 
 //--------------------------------------------
 void drawcb(Fl_Widget *, void *) {

@@ -23,7 +23,7 @@ extern int tickstep;
 extern int nodesnumber;
 extern int sourcenode;
 
-extern int vincolo;
+extern float vincolo;
 extern int threshold;
 extern int particles;
 extern int maxtime;
@@ -34,6 +34,8 @@ extern int haveloadedstate;
 extern int usesteady;
 extern int isdissipating;
 extern int israndomsources;
+
+extern int nsn;
 
 extern int isturbo;
 extern int istjob;
@@ -335,7 +337,7 @@ void Evolution(double dt){
     double tempreal, dontmove;
     
     igraph_vector_t sourcenodes;
-    int nsn;
+
     
     if (ticks!=0){
         nodesnumber=igraph_matrix_nrow(&admatrix);
@@ -360,7 +362,13 @@ void Evolution(double dt){
                             nsn=1;
                         }
                         else {
-                            nsn=(vincolo/threshold);
+                            
+                            if(vincolo!=0 && threshold !=0){
+                                if((vincolo/threshold)<(nodesnumber-1)){nsn=(vincolo/threshold);}
+                                else{nsn=nodesnumber-1;}
+                            }
+                            else {nsn=1;}
+                            
                             if(nsn==0){nsn=1;}
                         }
                         
@@ -655,7 +663,7 @@ void TurboRun(double dt){
     realrate=floor(vincolo);
     
     igraph_vector_t sourcenodes;
-    int nsn;
+
     
     nodesnumber=igraph_matrix_nrow(&admatrix);
     
@@ -690,8 +698,15 @@ void TurboRun(double dt){
                             nsn=1;
                         }
                         else {
-                            nsn=(vincolo/threshold);
+                            if(vincolo!=0 && threshold !=0){
+                                if((vincolo/threshold)<(nodesnumber-1)){nsn=(vincolo/threshold);}
+                                else{nsn=nodesnumber-1;}
+                            }
+                            else {nsn=1;}
+                            
                             if(nsn==0){nsn=1;}
+                            
+                            
                         }
                         
                         igraph_vector_init(&sourcenodes,nsn);
@@ -1075,8 +1090,10 @@ void TurboRun(double dt){
         //if i HAVENT STEADY STATE
         else {
             
-            if(istjob==0){  //fprintf(output0,"%i ", time);
             fprintf(output1,"%i ", time);
+            
+            if(istjob==0){  //fprintf(output0,"%i ", time);
+            
             fprintf(output5,"%i ", time);
             
             for(int i=0;i<nodesnumber;++i){
@@ -1095,11 +1112,31 @@ void TurboRun(double dt){
                 fprintf(output1,"%f " ,dens);
                 fprintf(output5,"%i ", shooted);
             }
-            
+             
             //fprintf(output0,"\n");
             fprintf(output1,"\n");
             fprintf(output5,"\n");
             }
+            
+            else if(istjob==1){
+                
+                for(int i=0;i<nodesnumber;++i){
+                    dens=0;
+                    shooted=0;
+                    for(int j=0; j<totrun; ++j){
+                        dens=dens+MATRIX(density,i,j);
+                        
+                        if(MATRIX(loss,i,j)!=0 && MATRIX(loss,i,j)!=MATRIX(dissipation,i,j)){
+                            ++MATRIX(activation,i,j);
+                        }
+                    }
+                    dens=dens/totrun;
+                    
+            }
+             fprintf(output1,"%f " ,dens);
+                
+            }
+            
             
             
             //if i have BRIDGES ("clustered" graph), I print the traffic on the BRIDGES, using "output3" file
