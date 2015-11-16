@@ -93,7 +93,7 @@ void print_matrix_ur(const igraph_matrix_t *m, FILE *f) {
 void print_vector_indexed(igraph_vector_t *v, FILE *f) {
     long int i;
     for (i=0; i<igraph_vector_size(v); i++) {
-        fprintf(f, "%li %f \n", i, (float)VECTOR(*v)[i]);
+        fprintf(f, "%li %f \n", i, (double)VECTOR(*v)[i]);
     }
     fprintf(f, "\n");
 }

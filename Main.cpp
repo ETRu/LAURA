@@ -225,12 +225,14 @@ int latticeside;
 
 
 //presets
-float vincolo=1;
+double vincolo=1;
 int threshold=1;
 int particles=10000;
 int beginner;
 int totrun=1;
 int maxtime=1000;
+
+double pn;
 
 //loading
 

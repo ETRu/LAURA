@@ -18,13 +18,15 @@ extern igraph_matrix_t dissipation;
 extern int latticedim;
 extern int latticeside;
 
-extern float vincolo;
+extern double vincolo;
 extern int threshold;
 extern int particles;
 extern int beginner;
 extern int totrun;
 extern int maxtime;
 extern double deltat;
+
+extern double pn;
 
 extern int lparticles;
 extern int ltotrun;
@@ -340,7 +342,7 @@ Fl_Button *done4;
 #define DEFBRIDGE2L2 1
 #define DEFWALL2L2 5
 
-#define DEFDISS2L 1
+#define DEFDISS2L 0.01
 
 
 
@@ -494,9 +496,9 @@ void goturbocb(Fl_Widget *, void *) {
 Fl_Value_Input *tjintime;
 Fl_Value_Input *tjinrun;
 
-Fl_Value_Input *tjinpfrom;
-Fl_Value_Input *tjinpto;
-Fl_Value_Input *tjinpstep;
+Fl_Value_Input *tjindfrom;
+Fl_Value_Input *tjindto;
+Fl_Value_Input *tjindstep;
 
 Fl_Value_Input *tjintfrom;
 Fl_Value_Input *tjintto;
@@ -564,25 +566,25 @@ void TJobDial(void) {
     
     xpos=xpos+200;
     
-    tjinpfrom = new Fl_Value_Input(xpos,ypos,widgw,widgh, "# Particles         ----- FROM: ");
-    tjinpfrom ->align(FL_ALIGN_LEFT);
-    tjinpfrom ->step(1);
-    tjinpfrom ->minimum(1);
-    tjinpfrom ->value(100);
+    tjindfrom = new Fl_Value_Input(xpos,ypos,widgw,widgh, "Dissipation of the net  ----- FROM: ");
+    tjindfrom ->align(FL_ALIGN_LEFT);
+    tjindfrom ->step(0.000001);
+    tjindfrom ->minimum(0.000001);
+    tjindfrom ->value(0.001);
     
     xpos=xpos+widgw+100;
-    tjinpto = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- TO: ");
-    tjinpto ->align(FL_ALIGN_LEFT);
-    tjinpto ->step(1);
-    tjinpto ->minimum(1);
-    tjinpto ->value(1000);
+    tjindto = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- TO: ");
+    tjindto ->align(FL_ALIGN_LEFT);
+    tjindto ->step(0.000001);
+    tjindto ->minimum(0.000001);
+    tjindto ->value(0.01);
     
     xpos=xpos+widgw+100;
-    tjinpstep = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- STEPS: ");
-    tjinpstep ->align(FL_ALIGN_LEFT);
-    tjinpstep ->step(1);
-    tjinpstep ->minimum(1);
-    tjinpstep ->value(2);
+    tjindstep = new Fl_Value_Input(xpos,ypos,widgw,widgh, " ----- STEPS: ");
+    tjindstep ->align(FL_ALIGN_LEFT);
+    tjindstep ->step(1);
+    tjindstep ->minimum(1);
+    tjindstep ->value(2);
     
     
     
@@ -684,71 +686,126 @@ void exitdialtjobcb(Fl_Widget *, void *){
 
 void gotjob(){
     
-    int minp, maxp, stepsp;
+    double mind, maxd; int stepsd;
     int mint, maxt, stepst;
-    float mins, maxs; int stepss;
+    double mins, maxs; int stepss;
     
     int totjob;
     
-    int dep, det; float des;
+    int det; double des, ded;
+    
+
+    double diss00;
     
     totrun=(int)tjinrun->value();
     maxtime=(int)tjintime->value();
     
-    minp = (int)tjinpfrom->value();
-    if( (int)tjinpto->value() < minp ){minp = (int)tjinpto->value();}
+    mind = (double)tjindfrom->value();
+    if( (double)tjindto->value() < mind ){mind = (double)tjindto->value();}
     
     mint = (int)tjintfrom->value();
     if( (int)tjintto->value() < mint ){mint = (int)tjintto->value();}
     
-    mins = (float)tjinsfrom->value();
-    if( (float)tjinsto->value() < mins ){mins = (float)tjinsto->value();}
+    mins = (double)tjinsfrom->value();
+    if( (double)tjinsto->value() < mins ){mins = (double)tjinsto->value();}
     
     
-    maxp = (int)tjinpto->value();
-    if( (int)tjinpfrom->value() > maxp ){maxp = (int)tjinpfrom->value();}
+    maxd = (double)tjindto->value();
+    if( (double)tjindfrom->value() > maxd ){maxd = (double)tjindfrom->value();}
     
     maxt = (int)tjintto->value();
     if( (int)tjintfrom->value() > maxt ){maxt = (int)tjintfrom->value();}
     
-    maxs = (float)tjinsto->value();
-    if( (float)tjinsfrom->value() > maxs ){maxs = (float)tjinsfrom->value();}
+    maxs = (double)tjinsto->value();
+    if( (double)tjinsfrom->value() > maxs ){maxs = (double)tjinsfrom->value();}
     
-    stepsp= (int)tjinpstep->value();
+    stepsd= (int)tjindstep->value();
     stepst= (int)tjintstep->value();
     stepss= (int)tjinsstep->value();
     
-    dep = floor((float)(maxp-minp)/stepsp); if(dep==0){dep=1;}
-    printf("\n maxp=%i minp=%i stepsp=%i dep=%i \n", maxp, minp, stepsp, dep);
-    det = floor((float)(maxt-mint)/stepst); if(det==0){det=1;}
+    if(stepsd>1){ded =(maxd-mind)/(stepsd-1); if(ded==0){ded=1;}} else {ded=0;}
+    printf("\n maxd=%lf mind=%lf stepsd=%i ded=%lf \n", maxd, mind, stepsd, ded);
+    if(stepst>1){det = floor((double)(maxt-mint)/(stepst-1)); if(det==0){det=1;}} else {det=0;}
     printf("\n maxt=%i mint=%i stepst=%i det=%i \n", maxt, mint, stepst, det);
-    des = (maxs-mins)/stepss; if(des==0){des=1;}
+    if(stepss>1){ des = (maxs-mins)/(stepss-1); if(des==0){des=1;} } else {des=0;}
     printf("\n maxs=%f mins=%f stepss=%i des=%f \n", maxs, mins, stepss, des);
     
-    totjob=stepsp*stepst*stepss;
+    totjob=(stepsd)*(stepst)*stepss;
+    
+    
+    
+    particles=(int)in1->value();
+    totrun=(int)in3->value();
+    
+    //particles=maxp*maxt*10;
+    
+    igraph_matrix_init(&adtemp,0,0);
+    igraph_matrix_update(&adtemp,&admatrix);
     
     int ccc=0;
     
-    for (int ppp=0; ppp<stepsp; ++ppp) {
+    for (int ddd=0; ddd<stepsd; ++ddd) {
         
-        particles = minp + ppp*dep;
+        
+        //diss00=MATRIX(admatrix,1,nodesnumber-1);
+        //diss00=1./pn;
+        
+        //diss00=mind*pow(10,ddd);
+        
+        diss00= mind + ddd*ded;
+        
+        //MATRIX(admatrix,0,nodesnumber-1);
         
         for (int ttt=0; ttt<stepst; ++ttt) {
         
             threshold = mint + ttt*det;
             
+            
             for(int sss=0; sss<stepss; ++sss)
                 
             {
-            
+                
+                
                 vincolo = mins + sss*des;
                 
+                
+                //FIX THE ADMATRIX IN ORDER TO PRESERVE PN:
+                if(isdissipating==1){
+                for (int row=0; row<nodesnumber-1; ++row) {
+                    //MATRIX(admatrix,row,nodesnumber-1)=diss00*vincolo;
+                    MATRIX(admatrix,row,nodesnumber-1)=diss00;
+                }
+                
+                for (int row=0; row<nodesnumber-1; ++row) {
+                     double tempsum=0;
+                    for (int col=0; col<nodesnumber-1; ++col) {
+                        tempsum=tempsum+MATRIX(adtemp,row,col);
+                        }
+                    
+                    for (int col=0; col<nodesnumber-1; ++col) {
+                        //MATRIX(admatrix,row,col)= ( MATRIX(adtemp,row,col)/tempsum ) * (1. - diss00*vincolo);
+                        MATRIX(admatrix,row,col)= ( MATRIX(adtemp,row,col)/tempsum ) * (1. - diss00);
+                    }
+                    
+                    
+                    }
+                
+                    
+                    pn=vincolo/diss00;
+                    
+                
+                /*printf("\n\n");
+                print_matrix_ur(&admatrix,stdout);
+                printf("\n\n");
+                fflush(stdout);
+                */
                 //printf(" \n\n  MINS %f  SSS %i  DES %s VINCOLO     %f  \n\n",mins, sss, des, vincolo);
                
+                }
                 ++ccc;
                 printf("\n");
                 logDebug("[%i/%i] \n", ccc , totjob ); fflush(stdout);
-                logDebug(" particles = %i | threshold = %i | vincolo = %f \n",  particles, threshold, vincolo); fflush(stdout);
+                logDebug(" TOT particles = %i | PN=%lf | threshold = %i | vincolo = %f | diss %lf \n",  particles, pn, threshold, vincolo, diss00); fflush(stdout);
                 
                 //clear();
                 
@@ -772,11 +829,14 @@ void gotjob(){
                     
                 }
                 
-                else if((int)roundLOAD->value()==1 && stateisloaded==1 && lparticles==particles && ltotrun==totrun){
+                else if((int)roundLOAD->value()==1 && stateisloaded==1){
+   
                     InitialStateLOAD();
                     in1->value(lparticles);
                     in3->value(ltotrun);
-                    maxtime=(int)in4->value();
+                    
+                    particles=lparticles;
+                    totrun=ltotrun;
                 }
                 
                 else{
@@ -787,7 +847,7 @@ void gotjob(){
                 
                 //set OUTPUT
                 char toutstring[100];
-                sprintf(toutstring,"-p%it%is%i-",ppp,ttt,sss);
+                sprintf(toutstring,"-d%it%is%i-",ddd,ttt,sss);
                 openout(toutstring);
                 //printf("------------- FILES OPENED\n");
                 
@@ -822,6 +882,9 @@ void gotjob(){
         
     }
     
+    igraph_matrix_destroy(&adtemp);
+    
+    exit(0);
     
    
 }
@@ -833,12 +896,9 @@ void gotjobcb(Fl_Widget *, void *) {
     
     if(isdissipating==0){tjinsstep->value(1);}
     
-    if((float)tjinsfrom->value() < 0.0001) {tjinsfrom->value(0.001);}
-    if((float)tjinsto->value() < 0.0001) {tjinsto->value(0.001);}
-    
-    if(abs( (int)tjinpfrom->value() - (int)tjinpto->value()  )<  (int)tjinpstep->value()){
-        tjinpstep->value(abs( (int)tjinpfrom->value() - (int)tjinpto->value())+1);
-    }
+    if((double)tjinsfrom->value() < 0.0001) {tjinsfrom->value(0.001);}
+    if((double)tjinsto->value() < 0.0001) {tjinsto->value(0.001);}
+   
     
     if(abs( (int)tjintfrom->value() - (int)tjintto->value()  )< (int)tjintstep->value()){
         tjintstep->value(abs( (int)tjintfrom->value() - (int)tjintto->value())+1);
@@ -846,20 +906,20 @@ void gotjobcb(Fl_Widget *, void *) {
     
     
     
-    if((int)tjinpfrom->value() == (int)tjinpto->value() ) {tjinpstep->value(1);}
+    if((double)tjindfrom->value() == (double)tjindto->value() ) {tjindstep->value(1);}
     if((int)tjintfrom->value() == (int)tjintto->value() ) {tjintstep->value(1);}
-    if((float)tjinsfrom->value() == (float)tjinsto->value() ) {tjinsstep->value(1);}
+    if((double)tjinsfrom->value() == (double)tjinsto->value() ) {tjinsstep->value(1);}
     
     
     logDebug("---  Turbo JOB  Started\n");
     printf(" PARAMETERS: \n");
-    printf("PARTICLES        from=%i   to=%i  step=%i \n", (int)tjinpfrom->value(), (int)tjinpto->value(), (int)tjinpstep->value());
+    printf("DISSIPATION        from=%f   to=%f  step=%i \n", (double)tjindfrom->value(), (double)tjindto->value(), (int)tjindstep->value());
     printf("THRESHOLD        from=%i   to=%i  step=%i \n", (int)tjintfrom->value(), (int)tjintto->value(), (int)tjintstep->value());
-    printf("SOURCE RATE      from=%f   to=%f  step=%i \n", (float)tjinsfrom->value(), (float)tjinsto->value(), (int)tjinsstep->value());
+    printf("SOURCE RATE      from=%f   to=%f  step=%i \n", (double)tjinsfrom->value(), (double)tjinsto->value(), (int)tjinsstep->value());
     printf("TIME             %i \n",(int)tjintime->value());
     printf("CONTEMP. RUNS    %i \n\n",(int)tjinrun->value());
     
-    printf("  Total number of simulations: %i\n", (int)tjinpstep->value() * (int)tjintstep->value() * (int)tjinsstep->value());
+    printf("  Total number of simulations: %i\n", (int)tjindstep->value() * (int)tjintstep->value() * (int)tjinsstep->value());
     
     
     dialtjob->hide();
@@ -1028,9 +1088,9 @@ void forcewlaycb(Fl_Widget *, void *) {
     
     igraph_vector_scale(&weight,10.);
     
-    igraph_layout_fruchterman_reingold(&graph, &layout,500, (float)nodesnumber,
+    igraph_layout_fruchterman_reingold(&graph, &layout,500, (double)nodesnumber,
                                        sqrt((double)nodesnumber), 1.5,
-                                       (float)(nodesnumber*nodesnumber), 0,
+                                       (double)(nodesnumber*nodesnumber), 0,
                                        &weight,
                                        NULL,NULL,NULL,NULL);
     
@@ -1046,9 +1106,9 @@ void forceunwlaycb(Fl_Widget *, void *) {
     
     
     
-    igraph_layout_fruchterman_reingold(&graph, &layout,500, (float)nodesnumber,
+    igraph_layout_fruchterman_reingold(&graph, &layout,500, (double)nodesnumber,
                                        sqrt((double)nodesnumber), 1.5,
-                                       (float)(nodesnumber*nodesnumber), 0,
+                                       (double)(nodesnumber*nodesnumber), 0,
                                        NULL,
                                        NULL,NULL,NULL,NULL);
     
@@ -1605,7 +1665,7 @@ void generaterandom1cb(Fl_Widget *, void *) {
     
     graphisloaded=0;
     
-    beginner=generaterandom1((int)innodesnumber->value(), (float)inprob->value(), (int)dissipaterancheck->value(), (double)dissran->value(), (int)dnran->value());
+    beginner=generaterandom1((int)innodesnumber->value(), (double)inprob->value(), (int)dissipaterancheck->value(), (double)dissran->value(), (int)dnran->value());
     
     if(graphisloaded==1){
         
@@ -2592,8 +2652,7 @@ void closeout(){
         fprintf(outputDETAILS,"NODES %i\n",nodesnumber);
         
         if(isdissipating==1){
-            fprintf(outputDETAILS,"DISSIPATING :  %f (diss: %f )\n",MATRIX(admatrix,0,nodesnumber-1),
-                    (-1.)*MATRIX(admatrix,0,nodesnumber-1) / ( MATRIX(admatrix,0,nodesnumber-1) -1 ) );
+            fprintf(outputDETAILS,"DISSIPATING :  %f \n",MATRIX(admatrix,0,nodesnumber-1) );
             
             if(israndomsources==1){
                 fprintf(outputDETAILS,"RANDOM SOURCES ( %i )\n", nsn );
@@ -3136,7 +3195,7 @@ void printhistodatacb(Fl_Widget *,void *){
     }
     
     
-    fprintf(output4,"%i %i %f %f %f\n", particles, nodesnumber, atof(meanbuff->text()), atof(varbuff->text()), atof(meanbuff->text())/sqrt((float)nodesnumber) );
+    fprintf(output4,"%i %i %f %f %f\n", particles, nodesnumber, atof(meanbuff->text()), atof(varbuff->text()), atof(meanbuff->text())/sqrt((double)nodesnumber) );
     
     fclose(output4);
     

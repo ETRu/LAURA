@@ -163,10 +163,25 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
             
         }
         
+        //normalize the connections of the nodes
+        for(int r=0;r<nodesnumber; ++r){
+            double tempsum=0;
+            for (int c=0; c<nodesnumber; ++c) {
+                tempsum=tempsum+MATRIX(admatrix,r,c);
+            }
+            
+            for (int c=0; c<nodesnumber; ++c) {
+                MATRIX(admatrix,r,c) = (MATRIX(admatrix,r,c) / tempsum)*(1.-drate) ;
+            }
+            
+        }
+        
         //connect the source (dissipation node---->cols of the source)
         //connect the sink (rows of the sink cluster--->dissipation node)
         if(dnode>nodesnumber){MATRIX(admatrix,nodesnumber,((nodesnumber/2)))=1;}
         else{MATRIX(admatrix,nodesnumber,dnode)=1;}
+        
+//        print_matrix_ur(&admatrix,stdout);
         
         
         printf("\n connected version \n");
@@ -234,7 +249,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
     double xmax, xmin, ymax, ymin;
     double stepx, stepy;
     igraph_vector_t neis;
-    float pot1, pot2;
+    double pot1, pot2;
     
     igraph_vector_t row;
     
@@ -292,11 +307,12 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
             
             
             //V(x,y)=x^2 + y^2
-            MATRIX(latticemat,xcoord,ycoord)=(xmin+xcoord*stepx)*(xmin+xcoord*stepx) + (ymin+ycoord*stepy)*(ymin+ycoord*stepy)  ;
+            // MATRIX(latticemat,xcoord,ycoord)=(xmin+xcoord*stepx)*(xmin+xcoord*stepx) + (ymin+ycoord*stepy)*(ymin+ycoord*stepy)  ;
             
             //V(x,y)=cos(x*2*PI)+y^2;
-            
-            MATRIX(latticemat,xcoord,ycoord)=3*cos((xmin+xcoord*stepx)*2*PI)+(ymin+ycoord*stepy)*(ymin+ycoord*stepy);
+            int aconstant;
+            aconstant=5;
+            MATRIX(latticemat,xcoord,ycoord)=aconstant*cos((xmin+xcoord*stepx)*2*PI)+(ymin+ycoord*stepy)*(ymin+ycoord*stepy);
             
             
             //MATRIX(latticemat,xcoord,ycoord)=0;
@@ -420,7 +436,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
         //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
-        for(int i=0;i<nodesnumber-1; ++i){
+        for(int i=0;i<nodesnumber; ++i){
             
           /*  double totsum=0;
             for(int j=0;j<igraph_matrix_ncol(&admatrix);++j){
@@ -440,6 +456,22 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
             MATRIX(admatrix,i,nodesnumber)=drate;
             
         }
+        
+        
+        //normalize the connections of the nodes
+        for(int r=0;r<nodesnumber; ++r){
+            double tempsum=0;
+            for (int c=0; c<nodesnumber; ++c) {
+                tempsum=tempsum+MATRIX(admatrix,r,c);
+            }
+            
+            for (int c=0; c<nodesnumber; ++c) {
+                MATRIX(admatrix,r,c) = (MATRIX(admatrix,r,c) / tempsum)*(1.-drate) ;
+            }
+            
+        }
+        
+        
         
         //connect the source (dissipation node---->cols of the source)
         //connect the sink (rows of the sink cluster--->dissipation node)
@@ -516,7 +548,7 @@ void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, i
 
 
 //--------------------------------------------
-int generaterandom1(int n, float probability, int diss, double drate, int dnode) {
+int generaterandom1(int n, double probability, int diss, double drate, int dnode) {
     
     igraph_t graphtemp;
     
@@ -596,7 +628,7 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
         //print_matrix_ur(&admatrix,stdout);printf("\n\n\n\n");
         
         //connect the sink
-        for(int i=0;i<nodesnumber-1; ++i){
+        for(int i=0;i<nodesnumber; ++i){
             
             /*double totsum=0;
             for(int j=0;j<igraph_matrix_ncol(&admatrix);++j){
@@ -614,6 +646,19 @@ int generaterandom1(int n, float probability, int diss, double drate, int dnode)
             //add dissipation
             */
             MATRIX(admatrix,i,nodesnumber)=drate;
+            
+        }
+        
+        //normalize the connections of the nodes
+        for(int r=0;r<nodesnumber; ++r){
+            double tempsum=0;
+            for (int c=0; c<nodesnumber; ++c) {
+                tempsum=tempsum+MATRIX(admatrix,r,c);
+            }
+            
+            for (int c=0; c<nodesnumber; ++c) {
+                MATRIX(admatrix,r,c) = (MATRIX(admatrix,r,c) / tempsum)*(1.-drate) ;
+            }
             
         }
         
@@ -864,9 +909,9 @@ void generateclustsym(int clusnumber, int clusdim, double interconn, double intr
     
     igraph_vector_scale(&weight,10.);
     
-    igraph_layout_fruchterman_reingold(&graph, &layout,500, (float)nodesnumber,
+    igraph_layout_fruchterman_reingold(&graph, &layout,500, (double)nodesnumber,
                                        sqrt((double)nodesnumber), 1.5,
-                                       (float)(nodesnumber*nodesnumber), 0,
+                                       (double)(nodesnumber*nodesnumber), 0,
                                        &weight,
                                        NULL,NULL,NULL,NULL);
     
@@ -1112,11 +1157,28 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
         //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         //connect the sink
-        for(int i=0;i<totnodes-(cnodes*nbridges); ++i){
-            
+        //for(int i=0;i<totnodes-(cnodes*nbridges); ++i)
+            for(int i=0;i<totnodes; ++i)
+            {
             MATRIX(adtemp,i,totnodes)=dissipation;
             
         }
+        
+        
+        //normalize the connections of the nodes
+        
+        for(int r=0;r<totnodes; ++r){
+            double tempsum=0;
+            for (int c=0; c<totnodes; ++c) {
+                tempsum=tempsum+MATRIX(adtemp,r,c);
+            }
+            
+            for (int c=0; c<totnodes; ++c) {
+                MATRIX(adtemp,r,c) = (MATRIX(adtemp,r,c) / tempsum)*(1.-dissipation) ;
+            }
+            
+        }
+         
         
         //connect the source (dissipation node---->cols of the source)
         //connect the sink (rows of the sink cluster--->dissipation node)
@@ -1258,9 +1320,9 @@ void generateclustsympots(int clusnumber, int clusdim, int cnodes, double interc
     
     igraph_vector_scale(&weight,10.);
     
-    igraph_layout_fruchterman_reingold(&graph, &layout,500, (float)nodesnumber,
+    igraph_layout_fruchterman_reingold(&graph, &layout,500, (double)nodesnumber,
                                        sqrt((double)nodesnumber), 1.5,
-                                       (float)(nodesnumber*nodesnumber), 0,
+                                       (double)(nodesnumber*nodesnumber), 0,
                                        &weight,
                                        NULL,NULL,NULL,NULL);
     
@@ -1743,17 +1805,33 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
         for(int i=0; i<igraph_matrix_nrow(&adtemp);++i)
         {MATRIX(adtemp,i,totnodes)=0;}
         
+        
         printf("\n --- ADDING DISSIPATION: adtemp, clean version (added new row and new column, all 0) \n");
         //print_matrix_ur(&adtemp,stdout);printf("\n\n\n\n");
         
         //connect the sink
-        for(int k=0;k<clusnumber2;++k){
-            for(int i=0;i<bigclusdim-(cnodes1*nbridges1); ++i){
-    
-            MATRIX(adtemp,(bigclusdim*k)+i,totnodes)=dissipation;
+        //for(int k=0;k<clusnumber2;++k){
+         //   for(int i=0;i<bigclusdim-(cnodes1*nbridges1); ++i)
+        
+        for(int i=0;i<totnodes; ++i){
+            MATRIX(adtemp,i,totnodes)=dissipation;
             
         }
+        
+        //normalize the connections of the nodes
+        
+        for(int r=0;r<totnodes; ++r){
+            double tempsum=0;
+            for (int c=0; c<totnodes; ++c) {
+                tempsum=tempsum+MATRIX(adtemp,r,c);
+            }
+            
+            for (int c=0; c<totnodes; ++c) {
+                MATRIX(adtemp,r,c) = (MATRIX(adtemp,r,c) / tempsum)*(1.-dissipation) ;
+            }
+            
         }
+        
         
         //connect the source (dissipation node---->cols of the source)
         //connect the sink (rows of the sink cluster--->dissipation node)
@@ -1943,9 +2021,9 @@ void generateclusger2(int clusnumber1, int clusnumber2, int clusdim1, int cnodes
     igraph_vector_scale(&weight,10.);
     
     
-    igraph_layout_fruchterman_reingold(&tempgraph, &layout,500, (float)nodesnumber,
+    igraph_layout_fruchterman_reingold(&tempgraph, &layout,500, (double)nodesnumber,
                                        sqrt((double)nodesnumber), 1.5,
-                                       (float)(nodesnumber*nodesnumber), 0,
+                                       (double)(nodesnumber*nodesnumber), 0,
                                        &weight,
                                        NULL,NULL,NULL,NULL);
     

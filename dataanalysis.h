@@ -30,8 +30,8 @@ public:
     void Clear();
     void CreateFromArray(igraph_vector_t inarray, int innbins, int normalize);
     void CreateFromArrayLog(igraph_vector_t inarray, int innbins, int normalize);
-    void CreateFromArrayMinMax(igraph_vector_t inarray, int innbins, float min, float max, int normalize);
-    void CreateFromArrayMinMaxLog(igraph_vector_t inarray, int innbins, float min, float max, int normalize);
+    void CreateFromArrayMinMax(igraph_vector_t inarray, int innbins, double min, double max, int normalize);
+    void CreateFromArrayMinMaxLog(igraph_vector_t inarray, int innbins, double min, double max, int normalize);
     
 };
 

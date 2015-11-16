@@ -34,7 +34,7 @@ void generatelattice(int mylatticedim, int mylatticeside, int myistoro, int myra
 void generatepotlat2d(int mylatticeside, int myistoro, int diss, double drate, int dnode);
 
 //random generators
-int generaterandom1(int n, float probability, int diss, double drate, int dnode);
+int generaterandom1(int n, double probability, int diss, double drate, int dnode);
 
 
 //clustered generators

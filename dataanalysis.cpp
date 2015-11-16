@@ -194,7 +194,7 @@ void LAURA_Histogram_1D::CreateFromArrayLog(igraph_vector_t inarray, int innbins
 
 
 
-void LAURA_Histogram_1D::CreateFromArrayMinMax(igraph_vector_t inarray, int innbins, float min, float max, int normalize){
+void LAURA_Histogram_1D::CreateFromArrayMinMax(igraph_vector_t inarray, int innbins, double min, double max, int normalize){
     
     double binwidth;
     int entries;
@@ -243,7 +243,7 @@ void LAURA_Histogram_1D::CreateFromArrayMinMax(igraph_vector_t inarray, int innb
     //calculate mean
     mean=0;
     for(int i=0; i<nbins;++i){
-        float naltrotemp;
+        double naltrotemp;
         naltrotemp=(min+((i+1./2)*binwidth))*VECTOR(bins)[i];
         mean=mean+naltrotemp;
         
@@ -257,7 +257,7 @@ void LAURA_Histogram_1D::CreateFromArrayMinMax(igraph_vector_t inarray, int innb
     
     variance=0;
     for(int i=0; i<nbins;++i){
-        float naltrotemp;
+        double naltrotemp;
         naltrotemp=((min+((i+1./2)*binwidth))-mean)*((min+((i+1./2)*binwidth))-mean)*VECTOR(bins)[i];
         variance=variance+naltrotemp;
         
@@ -272,7 +272,7 @@ void LAURA_Histogram_1D::CreateFromArrayMinMax(igraph_vector_t inarray, int innb
 }
 
 
-void LAURA_Histogram_1D::CreateFromArrayMinMaxLog(igraph_vector_t inarray, int innbins, float min, float max, int normalize){
+void LAURA_Histogram_1D::CreateFromArrayMinMaxLog(igraph_vector_t inarray, int innbins, double min, double max, int normalize){
     
     double binwidth;
     int entries;
@@ -339,7 +339,7 @@ void LAURA_Histogram_1D::CreateFromArrayMinMaxLog(igraph_vector_t inarray, int i
     //calculate mean
     mean=0;
     for(int i=0; i<nbins;++i){
-        float naltrotemp;
+        double naltrotemp;
         naltrotemp=(min+(i+1./2)*binwidth)*VECTOR(bins)[i];
         mean=mean+naltrotemp;
         
@@ -353,7 +353,7 @@ void LAURA_Histogram_1D::CreateFromArrayMinMaxLog(igraph_vector_t inarray, int i
     
     variance=0;
     for(int i=0; i<nbins;++i){
-        float naltrotemp;
+        double naltrotemp;
         naltrotemp=((min+((i+1./2)*binwidth))-mean)*((min+((i+1./2)*binwidth))-mean)*VECTOR(bins)[i];
         variance=variance+naltrotemp;
         
