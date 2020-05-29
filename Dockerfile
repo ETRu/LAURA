@@ -1,4 +1,7 @@
-FROM sarusso/metadesktop
+FROM sarusso/minimalmetadesktop:v0.2.0
+
+# Switch to root user
+USER root
 
 # Build dependencies
 RUN apt-get install -y  build-essential libxml2 libx11-dev libxml2-dev libglu1-mesa-dev freeglut3-dev man libpng-dev libx11-dev libjpeg-dev libxft-dev libxinerama-dev libtool automake bison byacc flex 
@@ -19,3 +22,5 @@ COPY / /opt/Rondine
 # Compile code
 RUN cd /opt/Rondine && make
 
+# Switch back to metauser user
+USER metauser
